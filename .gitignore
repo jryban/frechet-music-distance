@@ -1,0 +1,10 @@
+venv*/
+cache/
+**/__pycache__/
+logs/
+**/*.pth
+data/
+checkpoints/
+.DS_store
+dist/
+frechet_music_distance.egg-info/

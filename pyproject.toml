@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "frechet_music_distance"
+version = "0.1.0"
+dependencies = [
+  "abctoolkit",
+  "accelerate",
+  "joblib",
+  "numpy",
+  "tqdm",
+  "scipy",
+  "requests",
+  "mido",
+  "transformers",
+  "torch",
+  "unidecode"
+]
+requires-python = ">=3.9"
+authors = [
+  {name = "jryban"},
+]
+maintainers = [
+  {name = "jryban"},
+]
+description = "A library for computing Frechet Music Distance."
+readme = "README.md"
+license = {file = "LICENSE.txt"}
+keywords = [
+    "frechet", "music", "distance", "metric", "symbolic", "evaluation",
+    "generative", "frechet music distance", "symbolic music", "frechet distance",
+    "music metric", "symbolic music evaluation"
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/jryban/frechet-music-distance"
+Repository = "https://github.com/jryban/frechet-music-distance.git"
+
+[project.scripts]
+fmd = "frechet_music_distance.__main__:main"
+
+[tool.setuptools]
+packages = ["frechet_music_distance", "frechet_music_distance.models", "frechet_music_distance.models.clamp2"]

@@ -1,4 +1,6 @@
 venv*/
+.venv*/
+
 cache/
 **/__pycache__/
 logs/

@@ -10,7 +10,7 @@ from joblib import Memory
 from numpy.typing import NDArray
 from tqdm import tqdm
 
-from .models import CLaMP2Extractor
+from .models import CLaMP2Extractor, CLaMPExtractor
 from .utils import load_abc_task, load_midi_task
 
 CAHE_MEMORY_DIR = Path.home() / ".cache" / "frechet_music_distance" / "precomputed"
@@ -34,6 +34,8 @@ class FrechetMusicDistance:
         self.model_name = model_name
         if model_name == "clamp2":
             self.model = CLaMP2Extractor()
+        elif model_name == "clamp":
+            self.model = CLaMPExtractor()
 
         self._preprocess = partial(memory.cache(self._preprocess, ignore=["self"]), model_name=self.model_name)
         self._estimate_gaussian_parameters = memory.cache(self._estimate_gaussian_parameters, ignore=["self"])
@@ -174,9 +176,17 @@ class FrechetMusicDistance:
         # Since intercept is the FMD-inf, we can just return it
         return intercept, slope, r2, results
 
+    def _validate_models_to_extensions(self, model_name: str, ext: str) -> None:
+        if model_name == "clamp2" and ext not in {".midi", ".mid", ".abc"}:
+            raise ValueError(f"CLaMP2 model only supports .midi and .mid extensions, got {ext}")
+        if model_name == "clamp" and ext not in {".abc"}:
+            raise ValueError(f"CLaMP model only supports .abc extensions, got {ext}")
+
     def _load_dataset(self, dataset_path: Union[str, Path], file_ext: Optional[str] = None) -> Union[str, Path]:
         if file_ext is None:
             file_ext = self._get_file_ext(dataset_path)
+
+        self._validate_models_to_extensions(self.model_name, file_ext)
 
         if file_ext == ".mtf" or file_ext == ".abc":
             return self._load_music_files(dataset_path, task=load_abc_task)

@@ -58,6 +58,16 @@ class FrechetMusicDistance:
 
         return fmd_score
 
+    def score_in_memory(self, reference_dataset: list[str], test_dataset: list[str], method: str = "mle") -> float:
+        reference_features = self._extract_features(reference_dataset)
+        test_features = self._extract_features(test_dataset)
+        mean_reference, covariance_reference = self._estimate_gaussian_parameters(reference_features, method=method)
+        mean_test, covariance_test = self._estimate_gaussian_parameters(test_features, method=method)
+
+        fmd_score = self._compute_fmd(mean_reference, mean_test, covariance_reference, covariance_test)
+
+        return fmd_score
+
     def score_inf(
         self,
         reference_dataset: Union[str, Path],
@@ -67,10 +77,26 @@ class FrechetMusicDistance:
         steps: int = 25,
         min_n: int = 500,
         method: str = "mle"
-    ) -> float:
+    ) -> FMDInfResults:
 
         reference_features= self._preprocess(reference_dataset, reference_ext)
         test_features = self._preprocess(test_dataset, test_ext)
+        return self._fmd_inf_pipeline(reference_features, test_features, steps, min_n, method)
+
+    def score_inf_in_memory(
+        self,
+        reference_dataset: list[str],
+        test_dataset: list[str],
+        steps: int = 25,
+        min_n: int = 500,
+        method: str = "mle"
+    ) -> FMDInfResults:
+
+        reference_features = self._extract_features(reference_dataset)
+        test_features = self._extract_features(test_dataset)
+        return self._fmd_inf_pipeline(reference_features, test_features, steps, min_n, method)
+
+    def _fmd_inf_pipeline(self, reference_features: NDArray, test_features: NDArray, steps: int, min_n: int, method: str) -> FMDInfResults:
         mean_reference, covariance_reference = self._estimate_gaussian_parameters(reference_features, method=method)
 
         score, slope, r2, points = self._compute_fmd_inf(mean_reference, covariance_reference, test_features, steps, min_n, method)
@@ -84,8 +110,7 @@ class FrechetMusicDistance:
     def _preprocess(
         self,
         dataset_path: Union[str, Path],
-        ext: Optional[str] = None,
-        model_name: str = "clamp2",
+        ext: Optional[str] = None
     ) -> NDArray:
 
         data = self._load_dataset(dataset_path, ext)

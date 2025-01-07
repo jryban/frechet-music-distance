@@ -91,6 +91,18 @@ score = metric.score(
 )
 ```
 
+or if you have already data loaded into memory:
+
+```python
+from frechet_music_distance import FrechetMusicDistance
+
+metric = FrechetMusicDistance()
+score = metric.score_in_memory(
+    reference_data="<reference_data>",
+    test_data="<test_data>"
+)
+```
+
 #### FMD-Inf score
 ```python
 from frechet_music_distance import FrechetMusicDistance

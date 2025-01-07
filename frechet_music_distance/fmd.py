@@ -110,7 +110,8 @@ class FrechetMusicDistance:
     def _preprocess(
         self,
         dataset_path: Union[str, Path],
-        ext: Optional[str] = None
+        ext: Optional[str] = None,
+        model_name: str = "clamp2",
     ) -> NDArray:
 
         data = self._load_dataset(dataset_path, ext)

@@ -41,14 +41,14 @@ The library was tested on Linux and MacOS, but it should Work on Windows as well
 
 
 ## Usage
-The library currently supports **MIDI** and **ABC** symbolic music representaions.
+The library currently supports **MIDI** and **ABC** symbolic music representations.
 
 **Note**: When using ABC Notation please ensure that each song is located in a separate file.
 
 ### Command Line
 
 ```bash
-fmd [-h] [--model {clamp2,clamp}] [--reference_ext REFERENCE_EXT] [--test_ext TEST_EXT] [--inf]
+fmd score [-h] [--model {clamp2,clamp}] [--reference_ext REFERENCE_EXT] [--test_ext TEST_EXT] [--inf]
                               [--steps STEPS] [--min_n MIN_N] [--clear-cache]
                               <reference_dataset> <test_dataset>
 ```
@@ -69,12 +69,13 @@ fmd [-h] [--model {clamp2,clamp}] [--reference_ext REFERENCE_EXT] [--test_ext TE
                         Number of steps when calculating FMD-Inf
   * `--min_n, -n MIN_N`
                         Mininum sample size when calculating FMD-Inf (Must be smaller than the size of test dataset)
+  * `--clear-cache`     Clear the pre-computed cache before FMD calculation
 
 #### Cleanup
 Additionaly the pre-computed cache can be cleared by executing:
 
 ```bash
-fmd --clear-cache
+fmd clear
 ```
 
 ### Python API
@@ -115,8 +116,7 @@ Additionaly the pre-computed cache can be cleared like so:
 ```python
 from frechet_music_distance import FrechetMusicDistance
 
-metric = FrechetMusicDistance()
-metric.clear_cache()
+FrechetMusicDistance.clear_cache()
 ```
 
 ## Supported Models

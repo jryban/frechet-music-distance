@@ -75,7 +75,8 @@ class FrechetMusicDistance:
 
         return FMDInfResults(score, slope, r2, points)
 
-    def clear_cache(self) -> None:
+    @staticmethod
+    def clear_cache() -> None:
         memory.clear(warn=False)
 
     def _preprocess(
@@ -217,7 +218,7 @@ class FrechetMusicDistance:
         for filepath in file_list:
             res = pool.apply_async(
                 task,
-                args=(filepath, True),
+                args=(filepath,),
                 callback=lambda *args, **kwargs: pbar.update(),
             )
             task_results.append(res)

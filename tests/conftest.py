@@ -36,8 +36,14 @@ def fixture_midi_files(midi_data_path) -> list[str]:
 
     return midi_files
 
-@pytest.fixture(scope="function", name="fmd_clamp2")
+@pytest.fixture(scope="session", name="fmd_clamp2")
 def fixture_fmd_clamp2() -> FrechetMusicDistance:
     fmd = FrechetMusicDistance(model_name="clamp2", verbose=False)
+    yield fmd
+    fmd.clear_cache()
+
+@pytest.fixture(scope="session", name="fmd_clamp")
+def fixture_fmd_clamp() -> FrechetMusicDistance:
+    fmd = FrechetMusicDistance(model_name="clamp", verbose=False)
     yield fmd
     fmd.clear_cache()

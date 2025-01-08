@@ -1,8 +1,9 @@
-import pytest
 from pathlib import Path
 
-from frechet_music_distance.utils import load_midi_task, load_abc_task
+import pytest
+
 from frechet_music_distance.fmd import FrechetMusicDistance
+from frechet_music_distance.utils import load_abc_task, load_midi_task
 
 
 @pytest.fixture(scope="session", name="test_data_path")
@@ -28,6 +29,7 @@ def fixture_abc_files(abc_data_path) -> list[str]:
 
     return abc_files
 
+
 @pytest.fixture(scope="session", name="midi_files")
 def fixture_midi_files(midi_data_path) -> list[str]:
     midi_files = []
@@ -36,11 +38,13 @@ def fixture_midi_files(midi_data_path) -> list[str]:
 
     return midi_files
 
+
 @pytest.fixture(scope="session", name="fmd_clamp2")
 def fixture_fmd_clamp2() -> FrechetMusicDistance:
     fmd = FrechetMusicDistance(model_name="clamp2", verbose=False)
     yield fmd
     fmd.clear_cache()
+
 
 @pytest.fixture(scope="session", name="fmd_clamp")
 def fixture_fmd_clamp() -> FrechetMusicDistance:

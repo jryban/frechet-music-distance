@@ -48,3 +48,27 @@ fmd = "frechet_music_distance.__main__:main"
 
 [tool.setuptools]
 packages = ["frechet_music_distance", "frechet_music_distance.models", "frechet_music_distance.models.clamp2"]
+
+[tool.ruff]
+line-length = 120
+include = [
+    "pyproject.toml", "frechet_music_distance/**/*.py", "tests/**/*.py"
+]
+
+exclude = [
+    "tests/data/*",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4",  # flake8-comprehensions
+]
+
+[tool.mypy]
+disable_error_code = ["import-untyped"]
+

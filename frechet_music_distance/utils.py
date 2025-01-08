@@ -3,6 +3,7 @@ from typing import Union
 
 import mido
 import requests
+from mido.messages.messages import Message
 from tqdm import tqdm
 
 KB = 1024
@@ -34,8 +35,17 @@ def download_file(url: str, destination: Union[str, Path], verbose: bool = True,
 
 
 def load_midi_task(filepath: Union[str, Path], m3_compatible: bool = True) -> str:
-    skip_elements = {"text", "copyright", "track_name", "instrument_name",
-                     "lyrics", "marker", "cue_marker", "device_name", "sequencer_specific"}
+    skip_elements = {
+        "text",
+        "copyright",
+        "track_name",
+        "instrument_name",
+        "lyrics",
+        "marker",
+        "cue_marker",
+        "device_name",
+        "sequencer_specific",
+    }
     try:
         # Load a MIDI file
         mid = mido.MidiFile(str(filepath))
@@ -53,7 +63,7 @@ def load_midi_task(filepath: Union[str, Path], m3_compatible: bool = True) -> st
     return "\n".join(msg_list)
 
 
-def _msg_to_str(msg: str) -> str:
+def _msg_to_str(msg: Message) -> str:
     str_msg = ""
     for value in msg.dict().values():
         str_msg += " " + str(value)

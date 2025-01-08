@@ -28,7 +28,6 @@ class FMDInfResults:
 
 
 class FrechetMusicDistance:
-
     def __init__(self, model_name: str = "clamp2", verbose: bool = True) -> None:
         self.verbose = verbose
         self.model_name = model_name
@@ -46,10 +45,9 @@ class FrechetMusicDistance:
         test_dataset: Union[str, Path],
         reference_ext: Optional[str] = None,
         test_ext: Optional[str] = None,
-        method: str = "mle"
+        method: str = "mle",
     ) -> float:
-
-        reference_features= self._preprocess(reference_dataset, reference_ext)
+        reference_features = self._preprocess(reference_dataset, reference_ext)
         test_features = self._preprocess(test_dataset, test_ext)
         mean_reference, covariance_reference = self._estimate_gaussian_parameters(reference_features, method=method)
         mean_test, covariance_test = self._estimate_gaussian_parameters(test_features, method=method)
@@ -76,10 +74,9 @@ class FrechetMusicDistance:
         test_ext: Optional[str] = None,
         steps: int = 25,
         min_n: int = 500,
-        method: str = "mle"
+        method: str = "mle",
     ) -> FMDInfResults:
-
-        reference_features= self._preprocess(reference_dataset, reference_ext)
+        reference_features = self._preprocess(reference_dataset, reference_ext)
         test_features = self._preprocess(test_dataset, test_ext)
         return self._fmd_inf_pipeline(reference_features, test_features, steps, min_n, method)
 
@@ -89,17 +86,20 @@ class FrechetMusicDistance:
         test_dataset: list[str],
         steps: int = 25,
         min_n: int = 500,
-        method: str = "mle"
+        method: str = "mle",
     ) -> FMDInfResults:
-
         reference_features = self._extract_features(reference_dataset)
         test_features = self._extract_features(test_dataset)
         return self._fmd_inf_pipeline(reference_features, test_features, steps, min_n, method)
 
-    def _fmd_inf_pipeline(self, reference_features: NDArray, test_features: NDArray, steps: int, min_n: int, method: str) -> FMDInfResults:
+    def _fmd_inf_pipeline(
+        self, reference_features: NDArray, test_features: NDArray, steps: int, min_n: int, method: str
+    ) -> FMDInfResults:
         mean_reference, covariance_reference = self._estimate_gaussian_parameters(reference_features, method=method)
 
-        score, slope, r2, points = self._compute_fmd_inf(mean_reference, covariance_reference, test_features, steps, min_n, method)
+        score, slope, r2, points = self._compute_fmd_inf(
+            mean_reference, covariance_reference, test_features, steps, min_n, method
+        )
 
         return FMDInfResults(score, slope, r2, points)
 
@@ -113,19 +113,13 @@ class FrechetMusicDistance:
         ext: Optional[str] = None,
         model_name: str = "clamp2",
     ) -> NDArray:
-
         data = self._load_dataset(dataset_path, ext)
         features = self._extract_features(data)
 
         return features
 
     def _compute_fmd(
-        self,
-        mean_reference: NDArray,
-        mean_test: NDArray,
-        cov_reference: NDArray,
-        cov_test: NDArray,
-        eps: float = 1e-6
+        self, mean_reference: NDArray, mean_test: NDArray, cov_reference: NDArray, cov_test: NDArray, eps: float = 1e-6
     ) -> float:
         mu_test = np.atleast_1d(mean_test)
         mu_ref = np.atleast_1d(mean_reference)
@@ -133,9 +127,7 @@ class FrechetMusicDistance:
         sigma_test = np.atleast_2d(cov_test)
         sigma_ref = np.atleast_2d(cov_reference)
 
-        assert (
-            mu_test.shape == mu_ref.shape
-        ), "Training and test mean vectors have different lengths"
+        assert mu_test.shape == mu_ref.shape, "Training and test mean vectors have different lengths"
         assert (
             sigma_test.shape == sigma_ref.shape
         ), f"Training and test covariances have different dimensions, {sigma_test.shape} and {sigma_ref.shape}"
@@ -170,8 +162,7 @@ class FrechetMusicDistance:
         steps: int = 25,
         min_n: int = 500,
         method: str = "mle",
-    ) -> tuple[float, float, float, NDArray]:
-
+    ) -> tuple[float, float, float, list[tuple[int, float]]]:
         # Calculate maximum n
         max_n = len(test_features)
 
@@ -208,7 +199,7 @@ class FrechetMusicDistance:
         if model_name == "clamp" and ext not in {".abc"}:
             raise ValueError(f"CLaMP model only supports .abc extensions, got {ext}")
 
-    def _load_dataset(self, dataset_path: Union[str, Path], file_ext: Optional[str] = None) -> Union[str, Path]:
+    def _load_dataset(self, dataset_path: str | Path, file_ext: str | None = None) -> list[str]:
         if file_ext is None:
             file_ext = self._get_file_ext(dataset_path)
 
@@ -221,13 +212,15 @@ class FrechetMusicDistance:
             return self._load_music_files(dataset_path, task=load_midi_task)
 
         raise ValueError(
-            f"Dataset {dataset_path} has unsupported extension {file_ext}.Supported extensions are: .midi, .mid, .mtf, .abc"
+            f"Dataset {dataset_path} has unsupported extension {file_ext}."
+            f"Supported extensions are: .midi, .mid, .mtf, .abc"
         )
 
-    def _get_file_ext(self, dataset_path: Union[str, Path]) -> str:
+    @staticmethod
+    def _get_file_ext(dataset_path: Union[str, Path]) -> str | None:
         for file in Path(dataset_path).rglob("*"):
-                if file.suffix in {".abc", ".midi", ".mtf", ".mid"}:
-                    return file.suffix
+            if file.suffix in {".abc", ".midi", ".mtf", ".mid"}:
+                return file.suffix
         return None
 
     def _extract_features(self, data: list[str]) -> NDArray:
@@ -245,7 +238,7 @@ class FrechetMusicDistance:
         dataset_path = Path(dataset_path)
         file_list = reduce(
             lambda acc, arr: acc + arr,
-            [[str(f) for f in dataset_path.rglob(f'**/*{file_ext}')] for file_ext in supported_extensions]
+            [[str(f) for f in dataset_path.rglob(f"**/*{file_ext}")] for file_ext in supported_extensions],
         )
 
         pool = ThreadPool()

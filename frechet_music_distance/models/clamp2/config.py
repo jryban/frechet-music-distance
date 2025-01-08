@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 PATCH_SIZE = 64  # Size of each patch
 PATCH_LENGTH = 512  # Length of the patches
 PATCH_NUM_LAYERS = 12  # Number of layers in the encoder
@@ -23,13 +22,22 @@ CLAMP2_WEIGHTS_URL = "https://huggingface.co/sander-wood/clamp2/resolve/main/wei
 
 CLAMP2_WEIGHT_DIR = Path.home() / ".cache" / "frechet_music_distance" / "checkpoints" / "clamp2"
 CLAMP_CKPT_NAME = (
-    "weights_clamp2_h_size_" + str(CLAMP2_HIDDEN_SIZE) +
-    "_lr_" + str(CLAMP2_LEARNING_RATE) +
-    "_batch_" + str(CLAMP2_BATCH_SIZE) +
-    "_scale_" + str(LOGIT_SCALE) +
-    "_t_length_" + str(MAX_TEXT_LENGTH) +
-    "_t_model_" + TEXT_MODEL_NAME.replace("/", "_") +
-    "_t_dropout_" + str(TEXT_DROPOUT) +
-    "_m3_" + str(CLAMP2_LOAD_M3) + ".pth"
+    "weights_clamp2_h_size_"
+    + str(CLAMP2_HIDDEN_SIZE)
+    + "_lr_"
+    + str(CLAMP2_LEARNING_RATE)
+    + "_batch_"
+    + str(CLAMP2_BATCH_SIZE)
+    + "_scale_"
+    + str(LOGIT_SCALE)
+    + "_t_length_"
+    + str(MAX_TEXT_LENGTH)
+    + "_t_model_"
+    + TEXT_MODEL_NAME.replace("/", "_")
+    + "_t_dropout_"
+    + str(TEXT_DROPOUT)
+    + "_m3_"
+    + str(CLAMP2_LOAD_M3)
+    + ".pth"
 )
 CLAMP2_WEIGHTS_PATH = CLAMP2_WEIGHT_DIR / CLAMP_CKPT_NAME  # Path to store CLaMP2 model weights

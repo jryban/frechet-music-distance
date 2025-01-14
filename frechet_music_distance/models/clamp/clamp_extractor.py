@@ -1,7 +1,9 @@
 import torch
-from numpy.typing import NDArray
+import logging as lg
 from .clamp import CLaMP
 from .clamp_utils import MusicPatchilizer, PATCH_LENGTH
+
+logger = lg.getLogger(__name__)
 
 
 class CLaMPExtractor:
@@ -21,11 +23,11 @@ class CLaMPExtractor:
     @staticmethod
     def _get_available_device():
         if torch.cuda.is_available():
-            print('There are %d GPU(s) available.' % torch.cuda.device_count())
-            print('We will use the GPU:', torch.cuda.get_device_name(0))
+            logger.info(f'There are {torch.cuda.device_count()} GPU(s) available.')
+            logger.info(f"We will use the GPU: {torch.cuda.get_device_name(0)}")
             return torch.device("cuda")
         else:
-            print('No GPU available, using the CPU instead.')
+            logger.info("No GPU available, using the CPU instead.")
             return torch.device("cpu")
 
     def _encoding_data(self, data: list[str], music_length: int) -> list:
@@ -46,7 +48,8 @@ class CLaMPExtractor:
             ids_list.append(new_patches)
         return ids_list
 
-    def _abc_filter(self, lines: list) -> str:
+    @staticmethod
+    def _abc_filter(self, lines: list[str]) -> str:
         """
             Filter out the metadata from the abc file
 

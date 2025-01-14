@@ -1,6 +1,7 @@
 import os
 import requests
 from tqdm import tqdm
+from typing import Tuple
 
 import torch
 from transformers import AutoModel, AutoConfig, PreTrainedModel
@@ -26,7 +27,7 @@ class CLaMP(PreTrainedModel):
         music_proj (:obj:`torch.nn.Linear`): A linear layer to project the music encoding to the hidden size of the model.
     """
 
-    def __init__(self, config, text_model_name="distilroberta-base"):
+    def __init__(self, config, text_model_name="distilroberta-base") -> None:
         super(CLaMP, self).__init__(config)
         self.text_enc = AutoModel.from_pretrained(text_model_name)
         self.text_proj = torch.nn.Linear(config.hidden_size, config.hidden_size)
@@ -36,7 +37,8 @@ class CLaMP(PreTrainedModel):
         self.music_proj = torch.nn.Linear(config.hidden_size, config.hidden_size)
         torch.nn.init.normal_(self.music_proj.weight, std=0.02)
 
-    def forward(self, input_texts, text_masks, input_musics, music_masks):
+    def forward(self, input_texts: torch.LongTensor, text_masks: torch.LongTensor, input_musics: torch.LongTensor,
+                music_masks: torch.LongTensor) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
         """
         Args:
             input_texts (:obj:`torch.LongTensor` of shape :obj:`(batch_size, text_length)`):
@@ -68,7 +70,7 @@ class CLaMP(PreTrainedModel):
 
         return music_features, text_features
 
-    def avg_pooling(self, input_features, input_masks):
+    def avg_pooling(self, input_features: torch.FloatTensor, input_masks: torch.LongTensor) -> torch.FloatTensor:
         """
         Applies average pooling to the input features.
 
@@ -89,7 +91,7 @@ class CLaMP(PreTrainedModel):
         return avg_pool
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_name_or_path, *model_args, **kwargs):
+    def from_pretrained(cls, pretrained_model_name_or_path, *model_args, **kwargs) -> 'CLaMP':
         """
         Instantiate a CLaMP model from a pre-trained model configuration.
 

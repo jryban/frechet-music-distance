@@ -199,7 +199,7 @@ class FrechetMusicDistance:
         if model_name == "clamp" and ext not in {".abc"}:
             raise ValueError(f"CLaMP model only supports .abc extensions, got {ext}")
 
-    def _load_dataset(self, dataset_path: str | Path, file_ext: str | None = None) -> list[str]:
+    def _load_dataset(self, dataset_path: Union[str, Path], file_ext: Optional[str] = None) -> list[str]:
         if file_ext is None:
             file_ext = self._get_file_ext(dataset_path)
 
@@ -217,7 +217,7 @@ class FrechetMusicDistance:
         )
 
     @staticmethod
-    def _get_file_ext(dataset_path: Union[str, Path]) -> str | None:
+    def _get_file_ext(dataset_path: Union[str, Path]) -> Union[str, None]:
         for file in Path(dataset_path).rglob("*"):
             if file.suffix in {".abc", ".midi", ".mtf", ".mid"}:
                 return file.suffix

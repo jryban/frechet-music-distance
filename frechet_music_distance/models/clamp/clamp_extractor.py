@@ -1,13 +1,14 @@
-import torch
 import logging as lg
+
+import torch
+
 from .clamp import CLaMP
-from .clamp_utils import MusicPatchilizer, PATCH_LENGTH
+from .clamp_utils import PATCH_LENGTH, MusicPatchilizer
 
 logger = lg.getLogger(__name__)
 
 
 class CLaMPExtractor:
-
     def __init__(self) -> None:
         self.clamp_model_name = "sander-wood/clamp-small-1024"
         self.device = self._get_available_device()
@@ -23,7 +24,7 @@ class CLaMPExtractor:
     @staticmethod
     def _get_available_device() -> torch.device:
         if torch.cuda.is_available():
-            logger.info(f'There are {torch.cuda.device_count()} GPU(s) available.')
+            logger.info(f"There are {torch.cuda.device_count()} GPU(s) available.")
             logger.info(f"We will use the GPU: {torch.cuda.get_device_name(0)}")
             return torch.device("cuda")
         else:
@@ -51,29 +52,30 @@ class CLaMPExtractor:
     @staticmethod
     def _abc_filter(lines: list[str]) -> str:
         """
-            Filter out the metadata from the abc file
+        Filter out the metadata from the abc file
 
-            Args:
-                lines (list): List of lines in the abc file
+        Args:
+            lines (list): List of lines in the abc file
 
-            Returns:
-                music (str): Music string
-            """
+        Returns:
+            music (str): Music string
+        """
         music = ""
         for line in lines:
-            if line[:2] in ['A:', 'B:', 'C:', 'D:', 'F:', 'G', 'H:', 'N:', 'O:', 'R:', 'r:', 'S:', 'T:', 'W:', 'w:',
-                            'X:', 'Z:'] \
-                    or line == '\n' \
-                    or (line.startswith('%') and not line.startswith('%%score')):
+            if (
+                line[:2]
+                in ["A:", "B:", "C:", "D:", "F:", "G", "H:", "N:", "O:", "R:", "r:", "S:", "T:", "W:", "w:", "X:", "Z:"]
+                or line == "\n"
+                or (line.startswith("%") and not line.startswith("%%score"))
+            ):
                 continue
             else:
-                if "%" in line and not line.startswith('%%score'):
-                    line = "%".join(line.split('%')[:-1])
-                    music += line[:-1] + '\n'
+                if "%" in line and not line.startswith("%%score"):
+                    line = "%".join(line.split("%")[:-1])
+                    music += line[:-1] + "\n"
                 else:
-                    music += line + '\n'
+                    music += line + "\n"
         return music
-
 
     def _get_features(self, ids_list: list[torch.Tensor]) -> torch.Tensor:
         """
@@ -91,7 +93,7 @@ class CLaMPExtractor:
             for ids in ids_list:
                 ids = ids.unsqueeze(0)
                 masks = torch.tensor([1] * (int(len(ids[0]) / PATCH_LENGTH))).unsqueeze(0)
-                features = self.model.music_enc(ids, masks)['last_hidden_state']
+                features = self.model.music_enc(ids, masks)["last_hidden_state"]
                 features = self.model.avg_pooling(features, masks)
                 features = self.model.music_proj(features)
                 features_list.append(features[0])

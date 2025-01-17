@@ -2,7 +2,7 @@ import re
 from typing import Tuple
 
 import torch
-from transformers import BertModel, PreTrainedModel, BertConfig
+from transformers import BertConfig, BertModel, PreTrainedModel
 from unidecode import unidecode
 
 # Constants for patch length and number of features in a patch
@@ -78,7 +78,7 @@ class MusicPatchilizer:
         for i in range(min(patch_length, len(bar))):
             chr = bar[i]
             idx = ord(chr)
-            if  32 <= idx < 127:
+            if 32 <= idx < 127:
                 patch[i] = idx - 31
 
         if i + 1 < patch_length:
@@ -99,14 +99,16 @@ class MusicPatchilizer:
         bar = ""
 
         for idx in patch:
-            if  0 < idx < 96:
+            if 0 < idx < 96:
                 bar += chr(idx + 31)
             else:
                 break
 
         return bar
 
-    def encode(self, music: str, music_length: int, patch_length: int = PATCH_LENGTH, add_eos_patch: bool = False) -> list[list[int]]:
+    def encode(
+        self, music: str, music_length: int, patch_length: int = PATCH_LENGTH, add_eos_patch: bool = False
+    ) -> list[list[int]]:
         """
         Encodes the input music string as a list of patches.
 
@@ -202,7 +204,9 @@ class MusicEncoder(PreTrainedModel):
         torch.nn.init.normal_(self.patch_embedding.weight, std=0.02)
         self.enc = BertModel(config=config)
 
-    def forward(self, input_musics: torch.LongTensor, music_masks: torch.LongTensor) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
+    def forward(
+        self, input_musics: torch.LongTensor, music_masks: torch.LongTensor
+    ) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
         """
         Args:
             input_musics (:obj:`torch.LongTensor` of shape :obj:`(batch_size, music_length, patch_length)`):
@@ -223,7 +227,7 @@ class MusicEncoder(PreTrainedModel):
         # Reshape the input music patches to feed into the linear layer
         input_musics = input_musics.reshape(len(input_musics), -1, PATCH_LENGTH * PATCH_FEATURES).type(
             torch.FloatTensor
-)
+        )
         # Apply the linear layer to convert the one-hot encoded patches to hidden features
         input_musics = self.patch_embedding(input_musics.to(self.device))
 

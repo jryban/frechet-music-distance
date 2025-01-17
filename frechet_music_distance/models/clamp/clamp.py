@@ -4,7 +4,7 @@ from typing import Tuple
 import requests
 import torch
 from tqdm import tqdm
-from transformers import AutoConfig, AutoModel, PreTrainedModel, BertConfig
+from transformers import AutoConfig, AutoModel, BertConfig, PreTrainedModel
 
 from .clamp_utils import MusicEncoder
 

@@ -23,7 +23,8 @@ authors = [
   {name = "jryban"},
 ]
 maintainers = [
-  {name = "jryban"},
+    {name = "jryban"},
+    {name = "stepi2299"},
 ]
 description = "A library for computing Frechet Music Distance."
 readme = "README.md"

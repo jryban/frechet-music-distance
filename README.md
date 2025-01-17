@@ -86,20 +86,21 @@ from frechet_music_distance import FrechetMusicDistance
 
 metric = FrechetMusicDistance()
 score = metric.score(
-    reference_dataset="<reference_dataset>",
-    test_dataset="<test_dataset>"
+    reference_dataset="<reference_dataset_path>",
+    test_dataset="<test_dataset_path>"
 )
 ```
 
-or if you have already data loaded into memory:
+or if you have already data loaded into memory you can use `score_in_memory` method.
+You have to pass in that case the data as a list of strings.
 
 ```python
 from frechet_music_distance import FrechetMusicDistance
 
 metric = FrechetMusicDistance()
 score = metric.score_in_memory(
-    reference_data="<reference_data>",
-    test_data="<test_data>"
+    reference_data="<reference_dataset>",
+    test_data="<test_dataset>"
 )
 ```
 

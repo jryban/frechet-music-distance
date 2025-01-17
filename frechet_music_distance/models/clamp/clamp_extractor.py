@@ -21,7 +21,7 @@ class CLaMPExtractor:
         self.patch_length = PATCH_LENGTH
 
     @staticmethod
-    def _get_available_device():
+    def _get_available_device() -> torch.device:
         if torch.cuda.is_available():
             logger.info(f'There are {torch.cuda.device_count()} GPU(s) available.')
             logger.info(f"We will use the GPU: {torch.cuda.get_device_name(0)}")
@@ -30,7 +30,7 @@ class CLaMPExtractor:
             logger.info("No GPU available, using the CPU instead.")
             return torch.device("cpu")
 
-    def _encoding_data(self, data: list[str], music_length: int) -> list:
+    def _encoding_data(self, data: list[str], music_length: int) -> list[torch.Tensor]:
         """
         Encode the data into ids
 
@@ -49,7 +49,7 @@ class CLaMPExtractor:
         return ids_list
 
     @staticmethod
-    def _abc_filter(self, lines: list[str]) -> str:
+    def _abc_filter(lines: list[str]) -> str:
         """
             Filter out the metadata from the abc file
 

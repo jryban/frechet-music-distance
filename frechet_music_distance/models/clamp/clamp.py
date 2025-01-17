@@ -4,7 +4,7 @@ from tqdm import tqdm
 from typing import Tuple
 
 import torch
-from transformers import AutoModel, AutoConfig, PreTrainedModel
+from transformers import AutoConfig, AutoModel, PreTrainedModel, BertConfig
 
 from .clamp_utils import MusicEncoder
 
@@ -27,7 +27,7 @@ class CLaMP(PreTrainedModel):
         music_proj (:obj:`torch.nn.Linear`): A linear layer to project the music encoding to the hidden size of the model.
     """
 
-    def __init__(self, config, text_model_name="distilroberta-base") -> None:
+    def __init__(self, config: BertConfig, text_model_name: str = "distilroberta-base") -> None:
         super(CLaMP, self).__init__(config)
         self.text_enc = AutoModel.from_pretrained(text_model_name)
         self.text_proj = torch.nn.Linear(config.hidden_size, config.hidden_size)
@@ -91,7 +91,7 @@ class CLaMP(PreTrainedModel):
         return avg_pool
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_name_or_path, *model_args, **kwargs) -> 'CLaMP':
+    def from_pretrained(cls, pretrained_model_name_or_path: str, *model_args, **kwargs) -> 'CLaMP':
         """
         Instantiate a CLaMP model from a pre-trained model configuration.
 

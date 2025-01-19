@@ -1,5 +1,6 @@
-from joblib import Memory
 from pathlib import Path
+
+from joblib import Memory
 
 CAHE_MEMORY_DIR = Path.home() / ".cache" / "frechet_music_distance" / "precomputed"
 

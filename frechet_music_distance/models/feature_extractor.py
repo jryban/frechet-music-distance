@@ -1,9 +1,12 @@
 from abc import ABC, abstractmethod
 from typing import Any, Iterable
+
+import numpy as np
 from numpy.typing import NDArray
 from tqdm import tqdm
-import numpy as np
+
 from ..memory import MEMORY
+
 
 class FeatureExtractor(ABC):
 
@@ -14,7 +17,7 @@ class FeatureExtractor(ABC):
     @abstractmethod
     def extract_feature(self, data: Any) -> NDArray:
         pass
-    
+
     @abstractmethod
     def extract_features(self, data: Iterable[Any]) -> NDArray:
         features = []

@@ -1,17 +1,21 @@
+from typing import Any, Iterable
+
 import torch
 from accelerate import Accelerator
 from numpy.typing import NDArray
 from transformers import AutoTokenizer, BertConfig
 
 from ...utils import download_file
+from ..feature_extractor import FeatureExtractor
 from . import config
 from .clamp2_model import CLaMP2Model
 from .m3_patchilizer import M3Patchilizer
 
 
-class CLaMP2Extractor:
+class CLaMP2Extractor(FeatureExtractor):
 
-    def __init__(self) -> None:
+    def __init__(self, verbose: bool = True) -> None:
+        super().__init__(verbose)
         self.accelerator = Accelerator()
         self.device = self.accelerator.device
 
@@ -40,7 +44,7 @@ class CLaMP2Extractor:
 
     def _download_checkpoint(self) -> None:
         print(f"Downloading CLaMP2 weights from: {config.CLAMP2_WEIGHTS_URL} into {config.CLAMP2_WEIGHTS_PATH}")
-        download_file(config.CLAMP2_WEIGHTS_URL, config.CLAMP2_WEIGHTS_PATH, verbose=True)
+        download_file(config.CLAMP2_WEIGHTS_URL, config.CLAMP2_WEIGHTS_PATH, verbose=self.verbose)
 
     @torch.no_grad()
     def extract_feature(self, data: str) -> NDArray:
@@ -77,3 +81,6 @@ class CLaMP2Extractor:
         last_hidden_states_list = last_hidden_states_list.sum(dim=0) / feature_weights.sum()
 
         return last_hidden_states_list.unsqueeze(0).detach().cpu().numpy()
+
+    def extract_features(self, data: Iterable[Any]) -> NDArray:
+        return super().extract_features(data)

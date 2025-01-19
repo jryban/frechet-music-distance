@@ -1,14 +1,19 @@
-import torch
 import logging as lg
+from typing import Any, Iterable
+
+import torch
+from numpy.typing import NDArray
+
 from .clamp import CLaMP
-from .clamp_utils import MusicPatchilizer, PATCH_LENGTH
+from .clamp_utils import PATCH_LENGTH, MusicPatchilizer
 
 logger = lg.getLogger(__name__)
 
 
 class CLaMPExtractor:
 
-    def __init__(self) -> None:
+    def __init__(self, verbose: bool = True) -> None:
+        super().__init__(verbose)
         self.clamp_model_name = "sander-wood/clamp-small-1024"
         self.device = self._get_available_device()
         self.model = CLaMP.from_pretrained(self.clamp_model_name)
@@ -23,7 +28,7 @@ class CLaMPExtractor:
     @staticmethod
     def _get_available_device() -> torch.device:
         if torch.cuda.is_available():
-            logger.info(f'There are {torch.cuda.device_count()} GPU(s) available.')
+            logger.info(f"There are {torch.cuda.device_count()} GPU(s) available.")
             logger.info(f"We will use the GPU: {torch.cuda.get_device_name(0)}")
             return torch.device("cuda")
         else:
@@ -61,15 +66,15 @@ class CLaMPExtractor:
             """
         music = ""
         for line in lines:
-            if line[:2] in ['A:', 'B:', 'C:', 'D:', 'F:', 'G', 'H:', 'N:', 'O:', 'R:', 'r:', 'S:', 'T:', 'W:', 'w:',
-                            'X:', 'Z:'] \
-                    or line == '\n' \
-                    or (line.startswith('%') and not line.startswith('%%score')):
+            if line[:2] in ["A:", "B:", "C:", "D:", "F:", "G", "H:", "N:", "O:", "R:", "r:", "S:", "T:", "W:", "w:",
+                            "X:", "Z:"] \
+                    or line == "\n" \
+                    or (line.startswith("%") and not line.startswith("%%score")):
                 continue
             else:
-                if "%" in line and not line.startswith('%%score'):
-                    line = "%".join(line.split('%')[:-1])
-                    music += line[:-1] + '\n'
+                if "%" in line and not line.startswith("%%score"):
+                    line = "%".join(line.split("%")[:-1])
+                    music += line[:-1] + "\n"
                 else:
                     music += line + '\n'
         return music
@@ -91,7 +96,7 @@ class CLaMPExtractor:
             for ids in ids_list:
                 ids = ids.unsqueeze(0)
                 masks = torch.tensor([1] * (int(len(ids[0]) / PATCH_LENGTH))).unsqueeze(0)
-                features = self.model.music_enc(ids, masks)['last_hidden_state']
+                features = self.model.music_enc(ids, masks)["last_hidden_state"]
                 features = self.model.avg_pooling(features, masks)
                 features = self.model.music_proj(features)
                 features_list.append(features[0])
@@ -113,3 +118,6 @@ class CLaMPExtractor:
         ids = self._encoding_data([data], music_length=self.model.config.max_length)
         features = self._get_features(ids_list=ids)
         return features.detach().cpu().numpy()
+
+    def extract_features(self, data: Iterable[Any]) -> NDArray:
+        return super().extract_features(data)

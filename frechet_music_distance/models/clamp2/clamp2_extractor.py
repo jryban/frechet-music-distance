@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import torch
 from accelerate import Accelerator
 from numpy.typing import NDArray

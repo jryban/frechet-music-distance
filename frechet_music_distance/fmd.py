@@ -10,7 +10,7 @@ from joblib import Memory
 from numpy.typing import NDArray
 from tqdm import tqdm
 
-from .models import CLaMP2Extractor
+from .models import CLaMP2Extractor, CLaMPExtractor
 from .utils import load_abc_task, load_midi_task
 
 CAHE_MEMORY_DIR = Path.home() / ".cache" / "frechet_music_distance" / "precomputed"
@@ -34,6 +34,8 @@ class FrechetMusicDistance:
         self.model_name = model_name
         if model_name == "clamp2":
             self.model = CLaMP2Extractor()
+        elif model_name == "clamp":
+            self.model = CLaMPExtractor()
 
         self._preprocess = partial(memory.cache(self._preprocess, ignore=["self"]), model_name=self.model_name)
         self._estimate_gaussian_parameters = memory.cache(self._estimate_gaussian_parameters, ignore=["self"])
@@ -56,6 +58,16 @@ class FrechetMusicDistance:
 
         return fmd_score
 
+    def score_in_memory(self, reference_dataset: list[str], test_dataset: list[str], method: str = "mle") -> float:
+        reference_features = self._extract_features(reference_dataset)
+        test_features = self._extract_features(test_dataset)
+        mean_reference, covariance_reference = self._estimate_gaussian_parameters(reference_features, method=method)
+        mean_test, covariance_test = self._estimate_gaussian_parameters(test_features, method=method)
+
+        fmd_score = self._compute_fmd(mean_reference, mean_test, covariance_reference, covariance_test)
+
+        return fmd_score
+
     def score_inf(
         self,
         reference_dataset: Union[str, Path],
@@ -65,10 +77,26 @@ class FrechetMusicDistance:
         steps: int = 25,
         min_n: int = 500,
         method: str = "mle"
-    ) -> float:
+    ) -> FMDInfResults:
 
         reference_features= self._preprocess(reference_dataset, reference_ext)
         test_features = self._preprocess(test_dataset, test_ext)
+        return self._fmd_inf_pipeline(reference_features, test_features, steps, min_n, method)
+
+    def score_inf_in_memory(
+        self,
+        reference_dataset: list[str],
+        test_dataset: list[str],
+        steps: int = 25,
+        min_n: int = 500,
+        method: str = "mle"
+    ) -> FMDInfResults:
+
+        reference_features = self._extract_features(reference_dataset)
+        test_features = self._extract_features(test_dataset)
+        return self._fmd_inf_pipeline(reference_features, test_features, steps, min_n, method)
+
+    def _fmd_inf_pipeline(self, reference_features: NDArray, test_features: NDArray, steps: int, min_n: int, method: str) -> FMDInfResults:
         mean_reference, covariance_reference = self._estimate_gaussian_parameters(reference_features, method=method)
 
         score, slope, r2, points = self._compute_fmd_inf(mean_reference, covariance_reference, test_features, steps, min_n, method)
@@ -174,9 +202,17 @@ class FrechetMusicDistance:
         # Since intercept is the FMD-inf, we can just return it
         return intercept, slope, r2, results
 
+    def _validate_models_to_extensions(self, model_name: str, ext: str) -> None:
+        if model_name == "clamp2" and ext not in {".midi", ".mid", ".abc"}:
+            raise ValueError(f"CLaMP2 model only supports .midi and .mid extensions, got {ext}")
+        if model_name == "clamp" and ext not in {".abc"}:
+            raise ValueError(f"CLaMP model only supports .abc extensions, got {ext}")
+
     def _load_dataset(self, dataset_path: Union[str, Path], file_ext: Optional[str] = None) -> Union[str, Path]:
         if file_ext is None:
             file_ext = self._get_file_ext(dataset_path)
+
+        self._validate_models_to_extensions(self.model_name, file_ext)
 
         if file_ext == ".mtf" or file_ext == ".abc":
             return self._load_music_files(dataset_path, task=load_abc_task)

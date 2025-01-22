@@ -11,3 +11,4 @@ checkpoints/
 .DS_store
 dist/
 frechet_music_distance.egg-info/
+.sander-wood/

@@ -18,7 +18,7 @@ A library for calculating Frechet Music Distance (FMD). This is an official impl
 - Calculating FMD and FMD-Inf scores between two datasets for evaluation
 - Caching extracted features and distribution parameters to speedup subsequent computations
 - Support for various symbolic music representations (**MIDI** and **ABC**)
-- Support for various embedding models (**CLaMP 2**)(TODO: CLaMP 1)
+- Support for various embedding models (**CLaMP 2**)(**CLaMP 1**)
 - Support for various methods of estimating embedding distribution parameters (TODO)
 - Computation of per-song FMD to find outliers in the dataset (TODO)
 
@@ -86,8 +86,21 @@ from frechet_music_distance import FrechetMusicDistance
 
 metric = FrechetMusicDistance()
 score = metric.score(
-    reference_dataset="<reference_dataset>",
-    test_dataset="<test_dataset>"
+    reference_dataset="<reference_dataset_path>",
+    test_dataset="<test_dataset_path>"
+)
+```
+
+or if you have already data loaded into memory you can use `score_in_memory` method.
+You have to pass in that case the data as a list of strings (in MTF format).
+
+```python
+from frechet_music_distance import FrechetMusicDistance
+
+metric = FrechetMusicDistance()
+score = metric.score_in_memory(
+    reference_data="<reference_dataset>",
+    test_data="<test_dataset>"
 )
 ```
 
@@ -121,10 +134,10 @@ FrechetMusicDistance.clear_cache()
 
 ## Supported Models
 
-| Model | Name in library | Description | Creator |
-| --- | --- | --- | --- |
-| [CLaMP2](https://github.com/sanderwood/clamp2) | `clamp2` | CLaMP 2: Multimodal Music Information Retrieval Across 101 Languages Using Large Language Models | sanderwood |
-
+| Model | Name in library | Description | Creator         |
+| --- | --- | --- |-----------------|
+| [CLaMP](https://github.com/microsoft/muzic/tree/main/clamp) | `clamp` | CLaMP: Contrastive Language-Music Pre-training for Cross-Modal Symbolic Music Information Retrieval | Microsoft Muzic |
+| [CLaMP2](https://github.com/sanderwood/clamp2) | `clamp2` | CLaMP 2: Multimodal Music Information Retrieval Across 101 Languages Using Large Language Models | sanderwood      |
 
 
 ## Citation
@@ -143,6 +156,7 @@ If you use Frecheet Music Distance in your research, please cite the following p
 ## Acknowledgements
 
 This library uses code from the following repositories for handling the embedding models:
+* CLaMP 1: [microsoft/muzic/clamp](https://github.com/microsoft/muzic/tree/main/clamp)
 * CLaMP 2: [sanderwood/clamp2](https://github.com/sanderwood/clamp2)
 
 ## License

@@ -92,7 +92,7 @@ score = metric.score(
 ```
 
 or if you have already data loaded into memory you can use `score_in_memory` method.
-You have to pass in that case the data as a list of strings.
+You have to pass in that case the data as a list of strings (in MTF format).
 
 ```python
 from frechet_music_distance import FrechetMusicDistance

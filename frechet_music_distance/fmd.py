@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Optional
 
 import numpy as np
 import scipy.linalg
@@ -7,7 +8,9 @@ from numpy.typing import NDArray
 from tqdm import tqdm
 
 from .gaussian_estimators import GaussianEstimator, MaxLikelihoodEstimator
-from .models import CLaMP2Extractor, FeatureExtractor
+from .gaussian_estimators.utils import get_estimator_by_name
+from .models import FeatureExtractor
+from .models.utils import get_feature_extractor_by_name
 
 
 @dataclass
@@ -20,14 +23,25 @@ class FMDInfResults:
 
 class FrechetMusicDistance:
 
-    def __init__(self, feature_extractor: Optional[FeatureExtractor] = None, gaussian_estimator: Optional[GaussianEstimator] = None, verbose: bool = True) -> None:
-        self.verbose = verbose
-        self.feature_extractor = feature_extractor if feature_extractor else CLaMP2Extractor(verbose=verbose)
-        self.gaussian_estimator = gaussian_estimator if gaussian_estimator else MaxLikelihoodEstimator()
+    def __init__(
+            self,
+            feature_extractor: str | FeatureExtractor = "clamp2",
+            gaussian_estimator: str | GaussianEstimator = "mle",
+            verbose: bool = True,
+    ) -> None:
+        if isinstance(feature_extractor, str):
+            feature_extractor = get_feature_extractor_by_name(feature_extractor, verbose=verbose)
 
-    def score(self, reference_dataset: list[str], test_dataset: list[str]) -> float:
-        reference_features = self.feature_extractor.extract_features(reference_dataset)
-        test_features = self.feature_extractor.extract_features(test_dataset)
+        if isinstance(gaussian_estimator, str):
+            gaussian_estimator = get_estimator_by_name(gaussian_estimator)
+
+        self.feature_extractor = feature_extractor
+        self.gaussian_estimator = gaussian_estimator
+        self.verbose = verbose
+
+    def score(self, reference_data: list[str], test_data: list[str]) -> float:
+        reference_features = self.feature_extractor.extract_features(reference_data)
+        test_features = self.feature_extractor.extract_features(test_data)
         mean_reference, covariance_reference = self.gaussian_estimator.estimate_parameters(reference_features)
         mean_test, covariance_test = self.gaussian_estimator.estimate_parameters(test_features)
 
@@ -35,22 +49,22 @@ class FrechetMusicDistance:
 
     def score_inf(
         self,
-        reference_dataset: list[str],
-        test_dataset: list[str],
+        reference_data: list[str],
+        test_data: list[str],
         steps: int = 25,
         min_n: int = 500,
     ) -> FMDInfResults:
 
-        reference_features = self.feature_extractor.extract_features(reference_dataset)
-        test_features = self.feature_extractor.extract_features(test_dataset)
+        reference_features = self.feature_extractor.extract_features(reference_data)
+        test_features = self.feature_extractor.extract_features(test_data)
         mean_reference, covariance_reference = self.gaussian_estimator.estimate_parameters(reference_features)
 
         score, slope, r2, points = self._compute_fmd_inf(mean_reference, covariance_reference, test_features, steps, min_n)
         return FMDInfResults(score, slope, r2, points)
 
-    def score_individual(self, reference_dataset: list[str], test_song: str) -> float:
-        reference_features = self.feature_extractor.extract_features(reference_dataset)
-        test_features = self.feature_extractor.extract_feature(test_song)
+    def score_individual(self, reference_data: list[str], test_song_data: str) -> float:
+        reference_features = self.feature_extractor.extract_features(reference_data)
+        test_features = self.feature_extractor.extract_feature(test_song_data)
         mean_reference, covariance_reference = self.gaussian_estimator.estimate_parameters(reference_features)
         mean_test, covariance_test = test_features.flatten(), covariance_reference
 
@@ -62,7 +76,7 @@ class FrechetMusicDistance:
         mean_test: NDArray,
         cov_reference: NDArray,
         cov_test: NDArray,
-        eps: float = 1e-6
+        eps: float = 1e-6,
     ) -> float:
         mu_test = np.atleast_1d(mean_test)
         mu_ref = np.atleast_1d(mean_reference)
@@ -117,9 +131,11 @@ class FrechetMusicDistance:
         # Generate list of ns to use
         ns = [int(n) for n in np.linspace(min_n, max_n, steps)]
         results = []
+        rng = np.random.default_rng()
+
         for n in tqdm(ns, desc="Calculating FMD-inf", disable=(not self.verbose)):
             # Select n feature frames randomly (with replacement)
-            indices = np.random.choice(test_features.shape[0], size=n, replace=True)
+            indices = rng.choice(test_features.shape[0], size=n, replace=True)
             sample_test_features = test_features[indices]
 
             mean_test, cov_test = MaxLikelihoodEstimator().estimate_parameters(sample_test_features)

@@ -4,7 +4,7 @@ from ..memory import MEMORY
 
 class GaussianEstimator(ABC):
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.estimate_parameters = MEMORY.cache(self.estimate_parameters, ignore=["self"])
 
     @abstractmethod

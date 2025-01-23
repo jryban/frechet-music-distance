@@ -6,7 +6,7 @@ from .gaussian_estimator import GaussianEstimator
 
 class BasicShrinkageEstimator(GaussianEstimator):
 
-    def __init__(self, shrinkage: float = 0.1):
+    def __init__(self, shrinkage: float = 0.1) -> None:
         super().__init__()
         self.model = ShrunkCovariance(assume_centered=False, shrinkage=shrinkage)
 

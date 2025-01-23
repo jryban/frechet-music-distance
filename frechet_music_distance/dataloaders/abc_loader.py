@@ -1,11 +1,12 @@
-from .dataloader import DataLoader
-from typing import Union
 from pathlib import Path
+from typing import Union
+
+from .dataloader import DataLoader
 
 
 class ABCLoader(DataLoader):
 
-    def __init__(self, verbose: bool = True):
+    def __init__(self, verbose: bool = True) -> None:
         supported_extensions = (".abc",)
         super().__init__(supported_extensions, verbose)
 

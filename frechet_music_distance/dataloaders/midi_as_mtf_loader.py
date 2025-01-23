@@ -1,17 +1,20 @@
-from .dataloader import DataLoader
-from typing import Union
+from __future__ import annotations
+
 from pathlib import Path
+
 import mido
+
+from .dataloader import DataLoader
 
 
 class MIDIasMTFLoader(DataLoader):
 
-    def __init__(self, m3_compatible: bool = True, verbose: bool = True):
+    def __init__(self, m3_compatible: bool = True, verbose: bool = True) -> None:
         supported_extensions = (".mid", ".midi")
         super().__init__(supported_extensions, verbose)
         self.m3_compatible = m3_compatible
-    
-    def load_file(self, filepath: Union[str, Path]) -> str:
+
+    def load_file(self, filepath: str | Path) -> str:
         self._validate_file(filepath)
 
         skip_elements = {"text", "copyright", "track_name", "instrument_name",
@@ -27,8 +30,8 @@ class MIDIasMTFLoader(DataLoader):
                     str_msg = self._msg_to_str(msg)
                     msg_list.append(str_msg)
         except Exception as e:
-            msg = f"Could not load file: {filepath}"
-            raise OSError(f"{msg}. Error: {e}") from e
+            msg = f"Could not load file: {filepath}. Error: {e}"
+            raise OSError(msg) from e
 
         return "\n".join(msg_list)
 

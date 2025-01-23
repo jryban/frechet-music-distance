@@ -4,13 +4,14 @@ from typing import Any, Iterable
 import torch
 from numpy.typing import NDArray
 
+from ..feature_extractor import FeatureExtractor
 from .clamp import CLaMP
 from .clamp_utils import PATCH_LENGTH, MusicPatchilizer
 
 logger = lg.getLogger(__name__)
 
 
-class CLaMPExtractor:
+class CLaMPExtractor(FeatureExtractor):
 
     def __init__(self, verbose: bool = True) -> None:
         super().__init__(verbose)

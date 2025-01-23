@@ -1,14 +1,17 @@
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Union
 
 import requests
 from tqdm import tqdm
+
+from .memory import MEMORY
 
 KB = 1024
 MB = 1024 * KB
 
 
-def download_file(url: str, destination: Union[str, Path], verbose: bool = True, chunk_size: int = 10 * MB) -> None:
+def download_file(url: str, destination: str | Path, verbose: bool = True, chunk_size: int = 10 * MB) -> None:
     try:
         with requests.get(url, stream=True) as response:
             response.raise_for_status()
@@ -30,3 +33,7 @@ def download_file(url: str, destination: Union[str, Path], verbose: bool = True,
 
     except requests.exceptions.RequestException as e:
         print(f"Error downloading the file from url: {url}. Error: {e}")
+
+
+def clear_cache() -> None:
+    MEMORY.clear(warn=False)

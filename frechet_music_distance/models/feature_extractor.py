@@ -10,7 +10,7 @@ from ..memory import MEMORY
 
 class FeatureExtractor(ABC):
 
-    def __init__(self, verbose: bool = True):
+    def __init__(self, verbose: bool = True) -> None:
         self.verbose = verbose
         self.extract_features = MEMORY.cache(self.extract_features, ignore=["self"])
 

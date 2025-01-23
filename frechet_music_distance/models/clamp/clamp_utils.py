@@ -4,6 +4,7 @@ from typing import Tuple
 import torch
 from unidecode import unidecode
 from transformers import BertModel, PreTrainedModel, BertConfig
+import contextlib
 
 # Constants for patch length and number of features in a patch
 PATCH_LENGTH = 64
@@ -27,17 +28,17 @@ class MusicPatchilizer:
         encode(music, music_length, patch_length=PATCH_LENGTH, add_eos_patch=False): Encodes the input music string as a list of patches.
         decode(patches): Decodes a sequence of patches into a music score.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         # Delimiters used for splitting bars
         self.delimiters = "|:", "::", ":|", "[|", "||", "|]", "|"
         # Regular expression pattern for splitting bars
-        self.regexPattern = '('+'|'.join(map(re.escape, self.delimiters))+')'
+        self.regexPattern = "(" + "|".join(map(re.escape, self.delimiters)) + ")"
         # Padding, mask, and end-of-sequence token ids
         self.pad_id = 0
         self.mask_id = 96
         self.eos_id = 97
 
-    def split_bars(self, body: str):
+    def split_bars(self, body: str) -> list[str]:
         """
         Splits a body of music into individual bars using the delimiters specified in `self.delimiters`.
 
@@ -95,8 +96,8 @@ class MusicPatchilizer:
         bar = ""
 
         for idx in patch:
-            if 0 < idx<96:
-                bar += chr(idx+31)
+            if 0 < idx < 96:
+                bar += chr(idx + 31)
             else:
                 break
 
@@ -117,11 +118,9 @@ class MusicPatchilizer:
         """
         # Convert to ASCII and split into lines
         music = unidecode(music)
-        lines = music.split('\n')
-        try:
-            lines.remove('')
-        except:
-            pass
+        lines = music.split("\n")
+        with contextlib.suppress(Exception):
+            lines.remove("")
 
         body = ""
         patches = []
@@ -129,7 +128,7 @@ class MusicPatchilizer:
         # Iterate over lines, splitting bars and encoding each one as a patch
         for line in lines:
             # check if the line is a music score line or not
-            if len(line)>1 and ((line[0].isalpha() and line[1] == ':') or line.startswith('%%score')):
+            if len(line)>1 and ((line[0].isalpha() and line[1] == ":") or line.startswith("%%score")):
                 # if the current line is a music score line, encode the previous body as patches
                 if body!="":
                     bars = self.split_bars(body)
@@ -172,7 +171,7 @@ class MusicPatchilizer:
         """
         music = ""
         for patch in patches:
-            music += self.patch2bar(patch)+'\n'
+            music += self.patch2bar(patch) + "\n"
 
         return music
 
@@ -191,7 +190,7 @@ class MusicEncoder(PreTrainedModel):
         enc (:obj:`BertModel`): The BERT model used to encode the patches.
     """
     def __init__(self, config: BertConfig) -> None:
-        super(MusicEncoder, self).__init__(config)
+        super().__init__(config)
         self.patch_embedding = torch.nn.Linear(PATCH_LENGTH*PATCH_FEATURES, config.hidden_size)
         torch.nn.init.normal_(self.patch_embedding.weight, std=0.02)
         self.enc = BertModel(config=config)

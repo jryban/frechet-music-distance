@@ -1,12 +1,12 @@
-from numpy.typing import NDArray
 import numpy as np
+from numpy.typing import NDArray
 
 from .gaussian_estimator import GaussianEstimator
 
 
 class MaxLikelihoodEstimator(GaussianEstimator):
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def estimate_parameters(self, features: NDArray) -> tuple[NDArray, NDArray]:

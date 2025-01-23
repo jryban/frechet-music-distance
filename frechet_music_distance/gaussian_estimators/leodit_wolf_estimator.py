@@ -6,7 +6,7 @@ from .gaussian_estimator import GaussianEstimator
 
 class LeoditWolfEstimator(GaussianEstimator):
 
-    def __init__(self, block_size: int = 1000):
+    def __init__(self, block_size: int = 1000) -> None:
         super().__init__()
         self.model = LedoitWolf(assume_centered=False, block_size=block_size)
 

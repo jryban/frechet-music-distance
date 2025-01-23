@@ -6,7 +6,7 @@ from .gaussian_estimator import GaussianEstimator
 
 class OASEstimator(GaussianEstimator):
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.model = OAS(assume_centered=False)
 

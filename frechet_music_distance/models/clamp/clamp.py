@@ -1,10 +1,10 @@
 import os
-import requests
-from tqdm import tqdm
 from typing import Tuple
 
+import requests
 import torch
-from transformers import AutoConfig, AutoModel, PreTrainedModel, BertConfig
+from tqdm import tqdm
+from transformers import AutoConfig, AutoModel, BertConfig, PreTrainedModel
 
 from .clamp_utils import MusicEncoder
 
@@ -24,7 +24,8 @@ class CLaMP(PreTrainedModel):
         text_enc (:obj:`AutoModel`): The pre-trained text model used for text encoding.
         text_proj (:obj:`torch.nn.Linear`): A linear layer to project the text encoding to the hidden size of the model.
         music_enc (:obj:`MusicEncoder`): The music encoder model used for music encoding.
-        music_proj (:obj:`torch.nn.Linear`): A linear layer to project the music encoding to the hidden size of the model.
+        music_proj (:obj:`torch.nn.Linear`): A linear layer to project the music encoding to the hidden size
+        of the model.
     """
 
     def __init__(self, config: BertConfig, text_model_name: str = "distilroberta-base") -> None:
@@ -37,8 +38,13 @@ class CLaMP(PreTrainedModel):
         self.music_proj = torch.nn.Linear(config.hidden_size, config.hidden_size)
         torch.nn.init.normal_(self.music_proj.weight, std=0.02)
 
-    def forward(self, input_texts: torch.LongTensor, text_masks: torch.LongTensor, input_musics: torch.LongTensor,
-                music_masks: torch.LongTensor) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
+    def forward(
+        self,
+        input_texts: torch.LongTensor,
+        text_masks: torch.LongTensor,
+        input_musics: torch.LongTensor,
+        music_masks: torch.LongTensor,
+    ) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
         """
         Args:
             input_texts (:obj:`torch.LongTensor` of shape :obj:`(batch_size, text_length)`):
@@ -51,7 +57,8 @@ class CLaMP(PreTrainedModel):
                 Tensor containing the attention masks for the music patches.
 
         Returns:
-            :obj:`tuple(torch.FloatTensor)` comprising various elements depending on the configuration (:class:`~transformers.BertConfig`) and inputs:
+            :obj:`tuple(torch.FloatTensor)` comprising various elements depending on the configuration
+             (:class:`~transformers.BertConfig`) and inputs:
             music_features (:obj:`torch.FloatTensor` of shape :obj:`(batch_size, hidden_size)`):
                 The music features extracted from the music encoder.
             text_features (:obj:`torch.FloatTensor` of shape :obj:`(batch_size, hidden_size)`):
@@ -59,12 +66,13 @@ class CLaMP(PreTrainedModel):
         """
         # Encode input texts
         text_features = self.text_enc(input_texts.to(self.device), attention_mask=text_masks.to(self.device))[
-            'last_hidden_state']
+            "last_hidden_state"
+        ]
         text_features = self.avg_pooling(text_features, text_masks)
         text_features = self.text_proj(text_features)
 
         # Encode input musics
-        music_features = self.music_enc(input_musics, music_masks)['last_hidden_state']
+        music_features = self.music_enc(input_musics, music_masks)["last_hidden_state"]
         music_features = self.avg_pooling(music_features, music_masks)
         music_features = self.music_proj(music_features)
 
@@ -91,7 +99,7 @@ class CLaMP(PreTrainedModel):
         return avg_pool
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_name_or_path: str, *model_args, **kwargs) -> 'CLaMP':
+    def from_pretrained(cls, pretrained_model_name_or_path: str, *model_args, **kwargs) -> "CLaMP":
         """
         Instantiate a CLaMP model from a pre-trained model configuration.
 
@@ -118,9 +126,9 @@ class CLaMP(PreTrainedModel):
             # download config file
             with requests.get(config_url, stream=True) as r:
                 r.raise_for_status()
-                total_size = int(r.headers.get('content-length', 0))
-                with open(model_dir + "/config.json", 'wb') as f:
-                    with tqdm(total=total_size, unit='B', unit_scale=True, desc='Downloading config') as pbar:
+                total_size = int(r.headers.get("content-length", 0))
+                with open(model_dir + "/config.json", "wb") as f:
+                    with tqdm(total=total_size, unit="B", unit_scale=True, desc="Downloading config") as pbar:
                         for chunk in r.iter_content(chunk_size=chunk_size):
                             f.write(chunk)
                             pbar.update(len(chunk))
@@ -128,9 +136,9 @@ class CLaMP(PreTrainedModel):
             # download pytorch model file
             with requests.get(model_url, stream=True) as r:
                 r.raise_for_status()
-                total_size = int(r.headers.get('content-length', 0))
-                with open(model_dir + "/pytorch_model.bin", 'wb') as f:
-                    with tqdm(total=total_size, unit='B', unit_scale=True, desc='Downloading model') as pbar:
+                total_size = int(r.headers.get("content-length", 0))
+                with open(model_dir + "/pytorch_model.bin", "wb") as f:
+                    with tqdm(total=total_size, unit="B", unit_scale=True, desc="Downloading model") as pbar:
                         for chunk in r.iter_content(chunk_size=chunk_size):
                             f.write(chunk)
                             pbar.update(len(chunk))
@@ -138,7 +146,7 @@ class CLaMP(PreTrainedModel):
         # Load the model weights and configuration
         config = AutoConfig.from_pretrained(model_dir, *model_args, **kwargs)
         model = cls(config)
-        state_dict = torch.load(model_dir + str('/pytorch_model.bin'), weights_only=True)
+        state_dict = torch.load(model_dir + str("/pytorch_model.bin"), weights_only=True)
         model.load_state_dict(state_dict, strict=False)
 
         return model

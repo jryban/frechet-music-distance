@@ -1,2 +1,2 @@
-from .clamp2 import CLaMP2Extractor
-from .clamp import CLaMPExtractor
+from .clamp import CLaMPExtractor  # noqa: F401
+from .clamp2 import CLaMP2Extractor  # noqa: F401

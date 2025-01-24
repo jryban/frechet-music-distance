@@ -1,6 +1,8 @@
 import pytest
-from frechet_music_distance.models import CLaMP2Extractor, CLaMPExtractor
+
 from frechet_music_distance.fmd import FMDInfResults
+from frechet_music_distance.models import CLaMP2Extractor, CLaMPExtractor
+
 
 class TestFrechetMusicDistance:
     @staticmethod
@@ -28,7 +30,6 @@ class TestFrechetMusicDistance:
         assert score == pytest.approx(0, abs=0.1)
         fmd_clamp2.clear_cache()
 
-
     @staticmethod
     @pytest.mark.parametrize("input_dataset_path", ["midi_data_path", "abc_data_path"])
     def test_clamp2_score_inf(fmd_clamp2, midi_data_path, abc_data_path, input_dataset_path):
@@ -41,7 +42,6 @@ class TestFrechetMusicDistance:
         assert isinstance(score.points, list)
         fmd_clamp2.clear_cache()
 
-
     @staticmethod
     @pytest.mark.parametrize("input_dataset_path", ["midi_files", "abc_files"])
     def test_clamp2_score_in_memory(fmd_clamp2, midi_files, abc_files, input_dataset_path):
@@ -50,7 +50,6 @@ class TestFrechetMusicDistance:
         assert isinstance(score, float)
         assert score == pytest.approx(0, abs=0.1)
         fmd_clamp2.clear_cache()
-
 
     @staticmethod
     @pytest.mark.parametrize("input_dataset_path", ["midi_files", "abc_files"])

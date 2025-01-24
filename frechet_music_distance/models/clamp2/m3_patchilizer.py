@@ -8,7 +8,6 @@ from .config import PATCH_LENGTH, PATCH_SIZE
 
 
 class M3Patchilizer:
-
     def __init__(self) -> None:
         self.delimiters = ["|:", "::", ":|", "[|", "||", "|]", "|"]
         self.regexPattern = "(" + "|".join(map(re.escape, self.delimiters)) + ")"
@@ -41,9 +40,8 @@ class M3Patchilizer:
         patch_size: int = PATCH_SIZE,
         add_special_patches: bool = False,
         truncate: bool = False,
-        random_truncate: bool = False
+        random_truncate: bool = False,
     ) -> list[list[int]]:
-
         item = unidecode(item)
         lines = re.findall(r".*?\n|.*$", item)
         lines = list(filter(None, lines))  # remove empty lines
@@ -53,17 +51,19 @@ class M3Patchilizer:
         if lines[0].split(" ")[0] == "ticks_per_beat":
             patch = ""
             for line in lines:
-                if patch.startswith(line.split(" ")[0]) and (len(patch) + len(" ".join(line.split(" ")[1:])) <= patch_size-2):
+                if patch.startswith(line.split(" ")[0]) and (
+                    len(patch) + len(" ".join(line.split(" ")[1:])) <= patch_size - 2
+                ):
                     patch = patch[:-1] + "\t" + " ".join(line.split(" ")[1:])
                 else:
                     if patch:
                         patches.append(patch)
                     patch = line
-            if patch!="":
+            if patch != "":
                 patches.append(patch)
         else:
             for line in lines:
-                if len(line) > 1 and ((line[0].isalpha() and line[1] == ':') or line.startswith('%%')):
+                if len(line) > 1 and ((line[0].isalpha() and line[1] == ":") or line.startswith("%%")):
                     patches.append(line)
                 else:
                     bars = self.split_bars(line)
@@ -79,13 +79,13 @@ class M3Patchilizer:
         if len(patches) > PATCH_LENGTH and truncate:
             choices = ["head", "tail", "middle"]
             choice = random.choice(choices)
-            if choice=="head" or random_truncate is False:
+            if choice == "head" or random_truncate is False:
                 patches = patches[:PATCH_LENGTH]
-            elif choice=="tail":
+            elif choice == "tail":
                 patches = patches[-PATCH_LENGTH:]
             else:
-                start = random.randint(1, len(patches)-PATCH_LENGTH)
-                patches = patches[start:start+PATCH_LENGTH]
+                start = random.randint(1, len(patches) - PATCH_LENGTH)
+                patches = patches[start : start + PATCH_LENGTH]
 
         patches = [self.bar2patch(patch) for patch in patches]
 

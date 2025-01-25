@@ -42,17 +42,16 @@ class FrechetMusicDistance:
         self.mean_reference = None
         self.covariance_reference = None
 
-    def score_from_path(self, reference_path: str | Path, test_path: str | Path, reset_reference: bool = True) -> float:
-        if reset_reference or self.reference_mean is None or self.reference_covariance is None:
-            reference_features = self.feature_extractor.extract_features_from_path(reference_path)
-            self.mean_reference,  self.covariance_reference = self.gaussian_estimator.estimate_parameters(reference_features)
+    def score(self, reference_path: str | Path, test_path: str | Path) -> float:
+        reference_features = self.feature_extractor.extract_features_from_path(reference_path)
+        mean_reference,  covariance_reference = self.gaussian_estimator.estimate_parameters(reference_features)
 
         test_features = self.feature_extractor.extract_features_from_path(test_path)
         mean_test, covariance_test = self.gaussian_estimator.estimate_parameters(test_features)
 
-        return self._compute_fmd(self.mean_reference, mean_test, self.mean_reference, covariance_test)
+        return self._compute_fmd(mean_reference, mean_test, mean_reference, covariance_test)
 
-    def score_inf_from_path(
+    def score_inf(
         self,
         reference_path: str | Path,
         test_path: str | Path,
@@ -67,43 +66,9 @@ class FrechetMusicDistance:
         score, slope, r2, points = self._compute_fmd_inf(mean_reference, covariance_reference, test_features, steps, min_n)
         return FMDInfResults(score, slope, r2, points)
 
-    def score_individual_from_path(self, reference_path: str | Path, test_song_path: str | Path) -> float:
+    def score_individual(self, reference_path: str | Path, test_song_path: str | Path) -> float:
         reference_features = self.feature_extractor.extract_features_from_path(reference_path)
         test_features = self.feature_extractor.extract_feature_from_path(test_song_path)
-        mean_reference, covariance_reference = self.gaussian_estimator.estimate_parameters(reference_features)
-        mean_test, covariance_test = test_features.flatten(), covariance_reference
-
-        return self._compute_fmd(mean_reference, mean_test, covariance_reference, covariance_test)
-
-    def score_from_memory(self, reference_data: list[str], test_data: list[str], reset_reference: bool = True) -> float:
-        if reset_reference or self.reference_mean is None or self.reference_covariance is None:
-            reference_features = self.feature_extractor.extract_features(reference_data)
-            self.mean_reference,  self.covariance_reference = self.gaussian_estimator.estimate_parameters(reference_features)
-
-        test_features = self.feature_extractor.extract_features(test_data)
-        mean_test, covariance_test = self.gaussian_estimator.estimate_parameters(test_features)
-
-        return self._compute_fmd(self.mean_reference, mean_test, self.mean_reference, covariance_test)
-
-    def score_inf_from_memory(
-        self,
-        reference_data: list[str],
-        test_data: list[str],
-        steps: int = 25,
-        min_n: int = 500,
-        reset_reference: bool = True,
-    ) -> FMDInfResults:
-
-        reference_features = self.feature_extractor.extract_features(reference_data)
-        test_features = self.feature_extractor.extract_features(test_data)
-        mean_reference, covariance_reference = self.gaussian_estimator.estimate_parameters(reference_features)
-
-        score, slope, r2, points = self._compute_fmd_inf(mean_reference, covariance_reference, test_features, steps, min_n)
-        return FMDInfResults(score, slope, r2, points)
-
-    def score_individual_from_memory(self, reference_data: list[str], test_song_data: str, reset_reference: bool = True) -> float:
-        reference_features = self.feature_extractor.extract_features(reference_data)
-        test_features = self.feature_extractor.extract_feature(test_song_data)
         mean_reference, covariance_reference = self.gaussian_estimator.estimate_parameters(reference_features)
         mean_test, covariance_test = test_features.flatten(), covariance_reference
 

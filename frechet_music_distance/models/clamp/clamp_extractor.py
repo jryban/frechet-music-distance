@@ -112,7 +112,7 @@ class CLaMPExtractor(FeatureExtractor):
         return torch.stack(features_list).to(self.device)
 
     @torch.no_grad()
-    def extract_feature(self, data: str) -> torch.Tensor:
+    def _extract_feature(self, data: str) -> torch.Tensor:
         """
         Extract features from the music data
 
@@ -127,7 +127,7 @@ class CLaMPExtractor(FeatureExtractor):
         features = self._get_features(ids_list=ids)
         return features.detach().cpu().numpy()
 
-    def extract_features_from_path(self, dataset_path: str | Path) -> NDArray:
+    def extract_features(self, dataset_path: str | Path) -> NDArray:
         extension = get_dataset_ext(dataset_path)
 
         if extension == ".abc":
@@ -136,9 +136,9 @@ class CLaMPExtractor(FeatureExtractor):
             msg = f"CLAmP supports .abc files but got {extension}"
             raise ValueError(msg)
 
-        return super().extract_features(data)
+        return super()._extract_features(data)
 
-    def extract_feature_from_path(self, filepath: str | Path) -> NDArray:
+    def extract_feature(self, filepath: str | Path) -> NDArray:
         extension = Path(filepath).suffix
 
         if extension == ".abc":
@@ -147,4 +147,4 @@ class CLaMPExtractor(FeatureExtractor):
             msg = f"CLAmP 2 supports .abc files but got {extension}"
             raise ValueError(msg)
 
-        return super().extract_feature(data)
+        return super()._extract_feature(data)

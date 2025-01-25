@@ -53,7 +53,7 @@ class CLaMP2Extractor(FeatureExtractor):
         download_file(config.CLAMP2_WEIGHTS_URL, config.CLAMP2_WEIGHTS_PATH, verbose=self.verbose)
 
     @torch.no_grad()
-    def extract_feature(self, data: str) -> NDArray:
+    def _extract_feature(self, data: str) -> NDArray:
 
         input_data = self.patchilizer.encode(data, add_special_patches=True)
         input_data = torch.tensor(input_data)
@@ -88,7 +88,7 @@ class CLaMP2Extractor(FeatureExtractor):
 
         return last_hidden_states_list.unsqueeze(0).detach().cpu().numpy()
 
-    def extract_features_from_path(self, dataset_path: str | Path) -> NDArray:
+    def extract_features(self, dataset_path: str | Path) -> NDArray:
         extension = get_dataset_ext(dataset_path)
 
         if extension in (".mid", ".midi"):
@@ -99,9 +99,9 @@ class CLaMP2Extractor(FeatureExtractor):
             msg = f"CLAmP 2 supports .mid, .midi and .abc files but got {extension}"
             raise ValueError(msg)
 
-        return super().extract_features(data)
+        return super()._extract_features(data)
 
-    def extract_feature_from_path(self, filepath: str | Path) -> NDArray:
+    def extract_feature(self, filepath: str | Path) -> NDArray:
         extension = Path(filepath).suffix
 
         if extension in (".mid", ".midi"):
@@ -112,4 +112,4 @@ class CLaMP2Extractor(FeatureExtractor):
             msg = f"CLAmP 2 supports .mid, .midi and .abc files but got {extension}"
             raise ValueError(msg)
 
-        return super().extract_feature(data)
+        return super()._extract_feature(data)

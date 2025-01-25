@@ -1,6 +1,5 @@
 import argparse
 
-from .dataloaders.utils import get_dataloader_by_extension_and_model, get_dataset_ext
 from .fmd import FrechetMusicDistance
 from .utils import clear_cache
 
@@ -19,7 +18,7 @@ def create_parser() -> argparse.ArgumentParser:
     score_parser.add_argument("reference_dataset", nargs="?", help="Path to reference dataset")
     score_parser.add_argument("test_dataset", nargs="?", help="Path to test dataset")
     score_parser.add_argument("--model", "-m", choices=["clamp2", "clamp"], default="clamp2", help="Embedding model name")
-    score_parser.add_argument("--estimator", "-e", choices=["clamp2", "clamp"], default="clamp2", help="Gaussian estimator for mean and covariance")
+    score_parser.add_argument("--estimator", "-e", choices=["mle", "bootstrap", "oas", "shrinkage", "leodit_wolf"], default="mle", help="Gaussian estimator for mean and covariance")
     score_parser.add_argument("--inf", action="store_true", help="Use FMD-Inf extrapolation")
     score_parser.add_argument("--steps", "-s", default=25, type=int, help="Number of steps when calculating FMD-Inf")
     score_parser.add_argument("--min_n", "-n", default=500, type=int, help="Mininum sample size when calculating FMD-Inf (Must be smaller than the size of test dataset)")

@@ -7,7 +7,7 @@ from accelerate import Accelerator
 from numpy.typing import NDArray
 from transformers import AutoTokenizer, BertConfig
 
-from ...dataloaders import ABCLoader, MIDIasMTFLoader
+from ...dataloaders import ABCLoader, MIDIasMTFLoader, DataLoader
 from ...dataloaders.utils import get_dataset_ext
 from ...utils import download_file
 from ..feature_extractor import FeatureExtractor
@@ -88,28 +88,23 @@ class CLaMP2Extractor(FeatureExtractor):
 
         return last_hidden_states_list.unsqueeze(0).detach().cpu().numpy()
 
-    def extract_features(self, dataset_path: str | Path) -> NDArray:
-        extension = get_dataset_ext(dataset_path)
-
+    def _choose_dataloader(self, extension: str) -> DataLoader:
         if extension in (".mid", ".midi"):
-            data = self.midi_dataloader.load_dataset_async(dataset_path)
+            return self.midi_dataloader
         elif extension == ".abc":
-            data = self.abc_dataloader.load_dataset_async(dataset_path)
+            return self.abc_dataloader
         else:
             msg = f"CLAmP 2 supports .mid, .midi and .abc files but got {extension}"
             raise ValueError(msg)
+
+    def extract_features(self, dataset_path: str | Path) -> NDArray:
+        extension = get_dataset_ext(dataset_path)
+        data = self._choose_dataloader(extension).load_dataset_async(dataset_path)
 
         return super()._extract_features(data)
 
     def extract_feature(self, filepath: str | Path) -> NDArray:
         extension = Path(filepath).suffix
+        data = self._choose_dataloader(extension).load_file(filepath)
 
-        if extension in (".mid", ".midi"):
-            data = self.midi_dataloader.load_file(filepath)
-        elif extension == ".abc":
-            data = self.abc_dataloader.load_file(filepath)
-        else:
-            msg = f"CLAmP 2 supports .mid, .midi and .abc files but got {extension}"
-            raise ValueError(msg)
-
-        return super()._extract_feature(data)
+        return self._extract_feature(data)

@@ -11,7 +11,7 @@ def get_dataset_ext(dataset_path: str | Path, supported_extensions: set[str] | N
     if supported_extensions is None:
         supported_extensions = {".mid", ".midi", ".abc"}
 
-    for file in Path(dataset_path).rglob("*"):
+    for file in Path(dataset_path).rglob("**/*"):
         if file.suffix in supported_extensions:
             return file.suffix
     return None

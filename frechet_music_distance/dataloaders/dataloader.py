@@ -54,7 +54,7 @@ class DataLoader(ABC):
     def _load_files_async(self, file_paths: Iterable[str]) -> Iterable[Any]:
         task_results = []
 
-        pool = ProcessPool(processes=os.process_cpu_count())
+        pool = ProcessPool()
         pbar = tqdm(total=len(file_paths), disable=(not self.verbose))
 
         for filepath in file_paths:
@@ -74,5 +74,3 @@ class DataLoader(ABC):
         if ext not in self.supported_extensions:
             msg = f"{self} supports the following extensions: {self.supported_extensions}, but got: {ext}"
             raise ValueError(msg)
-
-

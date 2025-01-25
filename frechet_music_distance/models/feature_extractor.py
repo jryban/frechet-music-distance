@@ -24,7 +24,7 @@ class FeatureExtractor(ABC):
         features = []
 
         for song in tqdm(data, desc="Extracting features", disable=(not self.verbose)):
-            feature = self.extract_feature(song)
+            feature = self._extract_feature(song)
             features.append(feature)
 
         return np.vstack(features)

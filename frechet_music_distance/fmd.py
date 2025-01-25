@@ -68,9 +68,9 @@ class FrechetMusicDistance:
 
     def score_individual(self, reference_path: str | Path, test_song_path: str | Path) -> float:
         reference_features = self.feature_extractor.extract_features(reference_path)
-        test_features = self.feature_extractor.extract_feature(test_song_path)
+        test_feature = self.feature_extractor.extract_feature(test_song_path)
         mean_reference, covariance_reference = self.gaussian_estimator.estimate_parameters(reference_features)
-        mean_test, covariance_test = test_features.flatten(), covariance_reference
+        mean_test, covariance_test = test_feature.flatten(), covariance_reference
 
         return self._compute_fmd(mean_reference, mean_test, covariance_reference, covariance_test)
 

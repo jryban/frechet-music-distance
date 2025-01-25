@@ -5,7 +5,7 @@ from functools import reduce
 from multiprocessing import Pool as ProcessPool
 from pathlib import Path
 from typing import Any, Iterable
-
+import os
 from tqdm import tqdm
 
 
@@ -54,7 +54,7 @@ class DataLoader(ABC):
     def _load_files_async(self, file_paths: Iterable[str]) -> Iterable[Any]:
         task_results = []
 
-        pool = ProcessPool()
+        pool = ProcessPool(processes=os.process_cpu_count())
         pbar = tqdm(total=len(file_paths), disable=(not self.verbose))
 
         for filepath in file_paths:

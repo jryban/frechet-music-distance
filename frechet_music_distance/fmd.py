@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 import scipy.linalg
@@ -24,10 +25,10 @@ class FMDInfResults:
 class FrechetMusicDistance:
 
     def __init__(
-            self,
-            feature_extractor: str | FeatureExtractor = "clamp2",
-            gaussian_estimator: str | GaussianEstimator = "mle",
-            verbose: bool = True,
+        self,
+        feature_extractor: str | FeatureExtractor = "clamp2",
+        gaussian_estimator: str | GaussianEstimator = "mle",
+        verbose: bool = True,
     ) -> None:
         if isinstance(feature_extractor, str):
             feature_extractor = get_feature_extractor_by_name(feature_extractor, verbose=verbose)
@@ -38,21 +39,59 @@ class FrechetMusicDistance:
         self.feature_extractor = feature_extractor
         self.gaussian_estimator = gaussian_estimator
         self.verbose = verbose
+        self.mean_reference = None
+        self.covariance_reference = None
 
-    def score(self, reference_data: list[str], test_data: list[str]) -> float:
-        reference_features = self.feature_extractor.extract_features(reference_data)
-        test_features = self.feature_extractor.extract_features(test_data)
-        mean_reference, covariance_reference = self.gaussian_estimator.estimate_parameters(reference_features)
+    def score_from_path(self, reference_path: str | Path, test_path: str | Path, reset_reference: bool = True) -> float:
+        if reset_reference or self.reference_mean is None or self.reference_covariance is None:
+            reference_features = self.feature_extractor.extract_features_from_path(reference_path)
+            self.mean_reference,  self.covariance_reference = self.gaussian_estimator.estimate_parameters(reference_features)
+
+        test_features = self.feature_extractor.extract_features_from_path(test_path)
         mean_test, covariance_test = self.gaussian_estimator.estimate_parameters(test_features)
+
+        return self._compute_fmd(self.mean_reference, mean_test, self.mean_reference, covariance_test)
+
+    def score_inf_from_path(
+        self,
+        reference_path: str | Path,
+        test_path: str | Path,
+        steps: int = 25,
+        min_n: int = 500,
+    ) -> FMDInfResults:
+
+        reference_features = self.feature_extractor.extract_features_from_path(reference_path)
+        test_features = self.feature_extractor.extract_features_from_path(test_path)
+        mean_reference, covariance_reference = self.gaussian_estimator.estimate_parameters(reference_features)
+
+        score, slope, r2, points = self._compute_fmd_inf(mean_reference, covariance_reference, test_features, steps, min_n)
+        return FMDInfResults(score, slope, r2, points)
+
+    def score_individual_from_path(self, reference_path: str | Path, test_song_path: str | Path) -> float:
+        reference_features = self.feature_extractor.extract_features_from_path(reference_path)
+        test_features = self.feature_extractor.extract_feature_from_path(test_song_path)
+        mean_reference, covariance_reference = self.gaussian_estimator.estimate_parameters(reference_features)
+        mean_test, covariance_test = test_features.flatten(), covariance_reference
 
         return self._compute_fmd(mean_reference, mean_test, covariance_reference, covariance_test)
 
-    def score_inf(
+    def score_from_memory(self, reference_data: list[str], test_data: list[str], reset_reference: bool = True) -> float:
+        if reset_reference or self.reference_mean is None or self.reference_covariance is None:
+            reference_features = self.feature_extractor.extract_features(reference_data)
+            self.mean_reference,  self.covariance_reference = self.gaussian_estimator.estimate_parameters(reference_features)
+
+        test_features = self.feature_extractor.extract_features(test_data)
+        mean_test, covariance_test = self.gaussian_estimator.estimate_parameters(test_features)
+
+        return self._compute_fmd(self.mean_reference, mean_test, self.mean_reference, covariance_test)
+
+    def score_inf_from_memory(
         self,
         reference_data: list[str],
         test_data: list[str],
         steps: int = 25,
         min_n: int = 500,
+        reset_reference: bool = True,
     ) -> FMDInfResults:
 
         reference_features = self.feature_extractor.extract_features(reference_data)
@@ -62,7 +101,7 @@ class FrechetMusicDistance:
         score, slope, r2, points = self._compute_fmd_inf(mean_reference, covariance_reference, test_features, steps, min_n)
         return FMDInfResults(score, slope, r2, points)
 
-    def score_individual(self, reference_data: list[str], test_song_data: str) -> float:
+    def score_individual_from_memory(self, reference_data: list[str], test_song_data: str, reset_reference: bool = True) -> float:
         reference_features = self.feature_extractor.extract_features(reference_data)
         test_features = self.feature_extractor.extract_feature(test_song_data)
         mean_reference, covariance_reference = self.gaussian_estimator.estimate_parameters(reference_features)

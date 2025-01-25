@@ -1,3 +1,5 @@
+from __future__ import annotations
+from pathlib import Path
 from typing import Any, Iterable
 
 import torch
@@ -10,6 +12,8 @@ from ..feature_extractor import FeatureExtractor
 from . import config
 from .clamp2_model import CLaMP2Model
 from .m3_patchilizer import M3Patchilizer
+from ...dataloaders import DataLoader, MIDIasMTFLoader, ABCLoader
+from ...dataloaders.utils import get_dataset_ext
 
 
 class CLaMP2Extractor(FeatureExtractor):
@@ -18,6 +22,8 @@ class CLaMP2Extractor(FeatureExtractor):
         super().__init__(verbose)
         self.accelerator = Accelerator()
         self.device = self.accelerator.device
+        self.midi_dataloader = MIDIasMTFLoader(verbose=verbose)
+        self.abc_dataloader = ABCLoader(verbose=verbose)
 
         m3_config = BertConfig(
             vocab_size=1,
@@ -82,5 +88,28 @@ class CLaMP2Extractor(FeatureExtractor):
 
         return last_hidden_states_list.unsqueeze(0).detach().cpu().numpy()
 
-    def extract_features(self, data: Iterable[Any]) -> NDArray:
+    def extract_features_from_path(self, dataset_path: str | Path) -> NDArray:
+        extension = get_dataset_ext(dataset_path)
+
+        if extension in (".mid", ".midi"):
+            data = self.midi_dataloader.load_dataset_async(dataset_path)
+        elif extension == ".abc":
+            data = self.abc_dataloader.load_dataset_async(dataset_path)
+        else:
+            msg = f"CLAmP 2 supports .mid, .midi and .abc files but got {extension}"
+            raise ValueError(msg)
+
         return super().extract_features(data)
+
+    def extract_feature_from_path(self, filepath: str | Path) -> NDArray:
+        extension = Path(filepath).suffix
+
+        if extension in (".mid", ".midi"):
+            data = self.midi_dataloader.load_file(filepath)
+        elif extension == ".abc":
+            data = self.abc_dataloader.load_file(filepath)
+        else:
+            msg = f"CLAmP 2 supports .mid, .midi and .abc files but got {extension}"
+            raise ValueError(msg)
+
+        return super().extract_feature(data)

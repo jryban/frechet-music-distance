@@ -49,7 +49,6 @@ class DataLoader(ABC):
             results.append(res)
             pbar.update()
 
-
         return results
 
     def _load_files_async(self, file_paths: Iterable[str]) -> Iterable[Any]:

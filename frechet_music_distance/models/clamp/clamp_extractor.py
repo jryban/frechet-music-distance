@@ -1,6 +1,11 @@
+from __future__ import annotations
 import logging as lg
+from pathlib import Path
 from typing import Any, Iterable
 
+from ...dataloaders.abc_loader import ABCLoader
+
+from ...dataloaders.utils import get_dataset_ext
 import torch
 from numpy.typing import NDArray
 
@@ -25,6 +30,8 @@ class CLaMPExtractor(FeatureExtractor):
         self.softmax = torch.nn.Softmax(dim=1)
 
         self.patch_length = PATCH_LENGTH
+        self.abc_dataloader = ABCLoader(verbose=verbose)
+
 
     @staticmethod
     def _get_available_device() -> torch.device:
@@ -120,5 +127,24 @@ class CLaMPExtractor(FeatureExtractor):
         features = self._get_features(ids_list=ids)
         return features.detach().cpu().numpy()
 
-    def extract_features(self, data: Iterable[Any]) -> NDArray:
+    def extract_features_from_path(self, dataset_path: str | Path) -> NDArray:
+        extension = get_dataset_ext(dataset_path)
+
+        if extension == ".abc":
+            data = self.abc_dataloader.load_dataset_async(dataset_path)
+        else:
+            msg = f"CLAmP supports .abc files but got {extension}"
+            raise ValueError(msg)
+
         return super().extract_features(data)
+
+    def extract_feature_from_path(self, filepath: str | Path) -> NDArray:
+        extension = Path(filepath).suffix
+
+        if extension == ".abc":
+            data = self.abc_dataloader.load_file(filepath)
+        else:
+            msg = f"CLAmP 2 supports .abc files but got {extension}"
+            raise ValueError(msg)
+
+        return super().extract_feature(data)

@@ -1,19 +1,19 @@
 from __future__ import annotations
+
 from pathlib import Path
-from typing import Any, Iterable
 
 import torch
 from accelerate import Accelerator
 from numpy.typing import NDArray
 from transformers import AutoTokenizer, BertConfig
 
+from ...dataloaders import ABCLoader, MIDIasMTFLoader
+from ...dataloaders.utils import get_dataset_ext
 from ...utils import download_file
 from ..feature_extractor import FeatureExtractor
 from . import config
-from .clamp2_model import CLaMP2Model
+from .clamp2_model import CLaMP2
 from .m3_patchilizer import M3Patchilizer
-from ...dataloaders import DataLoader, MIDIasMTFLoader, ABCLoader
-from ...dataloaders.utils import get_dataset_ext
 
 
 class CLaMP2Extractor(FeatureExtractor):
@@ -33,7 +33,7 @@ class CLaMP2Extractor(FeatureExtractor):
             intermediate_size=config.M3_HIDDEN_SIZE*4,
             max_position_embeddings=config.PATCH_LENGTH
         )
-        self.model = CLaMP2Model(m3_config, text_model_name=config.TEXT_MODEL_NAME, hidden_size=config.CLAMP2_HIDDEN_SIZE)
+        self.model = CLaMP2(m3_config, text_model_name=config.TEXT_MODEL_NAME, hidden_size=config.CLAMP2_HIDDEN_SIZE)
         self.model = self.model.to(self.device)
         self.tokenizer = AutoTokenizer.from_pretrained(config.TEXT_MODEL_NAME)
         self.patchilizer = M3Patchilizer()

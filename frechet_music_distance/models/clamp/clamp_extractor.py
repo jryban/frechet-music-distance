@@ -10,7 +10,7 @@ import torch
 from numpy.typing import NDArray
 
 from ..feature_extractor import FeatureExtractor
-from .clamp import CLaMP
+from .clamp_model import CLaMP
 from .clamp_utils import PATCH_LENGTH, MusicPatchilizer
 
 logger = lg.getLogger(__name__)

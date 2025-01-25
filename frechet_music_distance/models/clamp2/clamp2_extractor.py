@@ -7,10 +7,11 @@ from accelerate import Accelerator
 from numpy.typing import NDArray
 from transformers import AutoTokenizer, BertConfig
 
-from ...dataloaders import ABCLoader, MIDIasMTFLoader, DataLoader
-from ...dataloaders.utils import get_dataset_ext
-from ...utils import download_file
-from ..feature_extractor import FeatureExtractor
+from frechet_music_distance.dataloaders import ABCLoader, DataLoader, MIDIasMTFLoader
+from frechet_music_distance.dataloaders.utils import get_dataset_ext
+from frechet_music_distance.models.feature_extractor import FeatureExtractor
+from frechet_music_distance.utils import download_file
+
 from . import config
 from .clamp2_model import CLaMP2
 from .m3_patchilizer import M3Patchilizer

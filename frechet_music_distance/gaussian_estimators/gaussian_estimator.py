@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
+
 from numpy.typing import NDArray
+
 from ..memory import MEMORY
+
 
 class GaussianEstimator(ABC):
 

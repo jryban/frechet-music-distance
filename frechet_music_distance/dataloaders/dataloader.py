@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from functools import reduce
 from multiprocessing import Pool as ProcessPool
 from pathlib import Path
-from typing import Any, Iterable
-import os
+from typing import Any
+
 from tqdm import tqdm
 
 

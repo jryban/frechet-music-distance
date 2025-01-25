@@ -49,7 +49,7 @@ class FrechetMusicDistance:
         test_features = self.feature_extractor.extract_features_from_path(test_path)
         mean_test, covariance_test = self.gaussian_estimator.estimate_parameters(test_features)
 
-        return self._compute_fmd(mean_reference, mean_test, mean_reference, covariance_test)
+        return self._compute_fmd(mean_reference, mean_test, covariance_reference, covariance_test)
 
     def score_inf(
         self,

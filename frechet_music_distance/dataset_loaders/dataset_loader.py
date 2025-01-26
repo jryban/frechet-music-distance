@@ -10,11 +10,11 @@ from typing import Any
 from tqdm import tqdm
 
 
-class DataLoader(ABC):
+class DatasetLoader(ABC):
 
     def __init__(self, supported_extensions: tuple[str], verbose: bool = True) -> None:
         self.verbose = verbose
-        self.supported_extensions = supported_extensions
+        self._supported_extensions = supported_extensions
 
     @abstractmethod
     def load_file(self, filepath: str | Path) -> Any:
@@ -36,7 +36,7 @@ class DataLoader(ABC):
         dataset_path = Path(dataset_path)
         file_paths = reduce(
             lambda acc, arr: acc + arr,
-            [[str(f) for f in dataset_path.rglob(f"**/*{file_ext}")] for file_ext in self.supported_extensions]
+            [[str(f) for f in dataset_path.rglob(f"**/*{file_ext}")] for file_ext in self._supported_extensions]
         )
         return file_paths
 
@@ -72,6 +72,6 @@ class DataLoader(ABC):
 
     def _validate_file(self, filepath: str | Path) -> None:
         ext = Path(filepath).suffix
-        if ext not in self.supported_extensions:
-            msg = f"{self} supports the following extensions: {self.supported_extensions}, but got: {ext}"
+        if ext not in self._supported_extensions:
+            msg = f"{self} supports the following extensions: {self._supported_extensions}, but got: {ext}"
             raise ValueError(msg)

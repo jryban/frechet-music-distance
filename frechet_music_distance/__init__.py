@@ -1,1 +1,1 @@
-from .fmd import FrechetMusicDistance  # noqa: F401
+from .fmd import FrechetMusicDistance

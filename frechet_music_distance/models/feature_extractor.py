@@ -13,7 +13,7 @@ from tqdm import tqdm
 class FeatureExtractor(ABC):
 
     def __init__(self, verbose: bool = True) -> None:
-        self.verbose = verbose
+        self._verbose = verbose
         self.extract_features = MEMORY.cache(self.extract_features, ignore=["self"])
 
     @abstractmethod
@@ -23,7 +23,7 @@ class FeatureExtractor(ABC):
     def _extract_features(self, data: Iterable[Any]) -> NDArray:
         features = []
 
-        for song in tqdm(data, desc="Extracting features", disable=(not self.verbose)):
+        for song in tqdm(data, desc="Extracting features", disable=(not self._verbose)):
             feature = self._extract_feature(song)
             features.append(feature)
 

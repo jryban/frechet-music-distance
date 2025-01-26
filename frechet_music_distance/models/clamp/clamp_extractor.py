@@ -2,9 +2,9 @@ from __future__ import annotations
 import logging as lg
 from pathlib import Path
 
-from ...dataloaders.abc_loader import ABCLoader, DataLoader
+from ...dataset_loaders.abc_loader import ABCLoader, DatasetLoader
 
-from ...dataloaders.utils import get_dataset_ext
+from ...dataset_loaders.utils import get_dataset_ext
 import torch
 from numpy.typing import NDArray
 
@@ -19,17 +19,17 @@ class CLaMPExtractor(FeatureExtractor):
 
     def __init__(self, verbose: bool = True) -> None:
         super().__init__(verbose)
-        self.clamp_model_name = "sander-wood/clamp-small-1024"
-        self.device = self._get_available_device()
-        self.model = CLaMP.from_pretrained(self.clamp_model_name)
-        self.model = self.model.to(self.device)
-        self.model.eval()
+        self._clamp_model_name = "sander-wood/clamp-small-1024"
+        self._device = self._get_available_device()
+        self._model = CLaMP.from_pretrained(self._clamp_model_name)
+        self._model = self._model.to(self._device)
+        self._model.eval()
 
-        self.patchilizer = MusicPatchilizer()
-        self.softmax = torch.nn.Softmax(dim=1)
+        self._patchilizer = MusicPatchilizer()
+        self._softmax = torch.nn.Softmax(dim=1)
 
-        self.patch_length = PATCH_LENGTH
-        self.abc_dataloader = ABCLoader(verbose=verbose)
+        self._patch_length = PATCH_LENGTH
+        self._abc_dataset_loader = ABCLoader(verbose=verbose)
 
 
     @staticmethod
@@ -54,7 +54,7 @@ class CLaMPExtractor(FeatureExtractor):
         """
         ids_list = []
         for item in data:
-            patches = self.patchilizer.encode(item, music_length=music_length, add_eos_patch=True)
+            patches = self._patchilizer.encode(item, music_length=music_length, add_eos_patch=True)
             new_patches = torch.tensor(patches)
             new_patches = new_patches.reshape(-1)
             ids_list.append(new_patches)
@@ -89,7 +89,7 @@ class CLaMPExtractor(FeatureExtractor):
 
     def _get_features(self, ids_list: list[torch.Tensor]) -> torch.Tensor:
         """
-        Get the features from the CLaMP model
+        Get the features from the CLaMP _model
 
         Args:
             ids_list (list): List of ids
@@ -103,12 +103,12 @@ class CLaMPExtractor(FeatureExtractor):
             for ids in ids_list:
                 ids = ids.unsqueeze(0)
                 masks = torch.tensor([1] * (int(len(ids[0]) / PATCH_LENGTH))).unsqueeze(0)
-                features = self.model.music_enc(ids, masks)["last_hidden_state"]
-                features = self.model.avg_pooling(features, masks)
-                features = self.model.music_proj(features)
+                features = self._model.music_enc(ids, masks)["last_hidden_state"]
+                features = self._model.avg_pooling(features, masks)
+                features = self._model.music_proj(features)
                 features_list.append(features[0])
 
-        return torch.stack(features_list).to(self.device)
+        return torch.stack(features_list).to(self._device)
 
     @torch.no_grad()
     def _extract_feature(self, data: str) -> torch.Tensor:
@@ -122,25 +122,25 @@ class CLaMPExtractor(FeatureExtractor):
 
         """
         # self._abc_filter([data])
-        ids = self._encoding_data([data], music_length=self.model.config.max_length)
+        ids = self._encoding_data([data], music_length=self._model.config.max_length)
         features = self._get_features(ids_list=ids)
         return features.detach().cpu().numpy()
 
-    def _choose_dataloader(self, extension: str) -> DataLoader:
+    def _choose_dataset_loader(self, extension: str) -> DatasetLoader:
         if extension == ".abc":
-            return self.abc_dataloader
+            return self._abc_dataset_loader
         else:
             msg = f"CLAmP 2 supports .abc files but got {extension}"
             raise ValueError(msg)
 
     def extract_features(self, dataset_path: str | Path) -> NDArray:
         extension = get_dataset_ext(dataset_path)
-        data = self._choose_dataloader(extension).load_dataset_async(dataset_path)
+        data = self._choose_dataset_loader(extension).load_dataset_async(dataset_path)
 
         return super()._extract_features(data)
 
     def extract_feature(self, filepath: str | Path) -> NDArray:
         extension = Path(filepath).suffix
-        data = self._choose_dataloader(extension).load_file(filepath)
+        data = self._choose_dataset_loader(extension).load_file(filepath)
 
         return self._extract_feature(data)

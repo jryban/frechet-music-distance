@@ -8,10 +8,10 @@ class OASEstimator(GaussianEstimator):
 
     def __init__(self) -> None:
         super().__init__()
-        self.model = OAS(assume_centered=False)
+        self._model = OAS(assume_centered=False)
 
     def estimate_parameters(self, features: NDArray) -> tuple[NDArray, NDArray]:
-        results = self.model.fit(features)
+        results = self._model.fit(features)
 
         mean = results.location_
         cov = results.covariance_

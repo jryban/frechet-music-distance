@@ -4,15 +4,15 @@ from pathlib import Path
 
 import mido
 
-from .dataloader import DataLoader
+from .dataset_loader import DatasetLoader
 
 
-class MIDIasMTFLoader(DataLoader):
+class MIDIasMTFLoader(DatasetLoader):
 
     def __init__(self, m3_compatible: bool = True, verbose: bool = True) -> None:
         supported_extensions = (".mid", ".midi")
         super().__init__(supported_extensions, verbose)
-        self.m3_compatible = m3_compatible
+        self._m3_compatible = m3_compatible
 
     def load_file(self, filepath: str | Path) -> str:
         self._validate_file(filepath)
@@ -26,7 +26,7 @@ class MIDIasMTFLoader(DataLoader):
 
             # Traverse the MIDI file
             for msg in mid.merged_track:
-                if not self.m3_compatible or (msg.type != "sysex" and not (msg.is_meta and msg.type in skip_elements)):
+                if not self._m3_compatible or (msg.type != "sysex" and not (msg.is_meta and msg.type in skip_elements)):
                     str_msg = self._msg_to_str(msg)
                     msg_list.append(str_msg)
         except Exception as e:

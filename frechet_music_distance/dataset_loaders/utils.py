@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .abc_loader import ABCLoader
-from .dataloader import DataLoader
+from .dataset_loader import DatasetLoader
 from .midi_as_mtf_loader import MIDIasMTFLoader
 
 
@@ -17,7 +17,7 @@ def get_dataset_ext(dataset_path: str | Path, supported_extensions: set[str] | N
     return None
 
 
-def get_dataloader_by_extension_and_model(file_ext: str, model_name: str, verbose: bool | None = None) -> DataLoader:
+def get_dataset_loader_by_extension_and_model(file_ext: str, model_name: str, verbose: bool | None = None) -> DatasetLoader:
     if model_name == "clamp":
         if file_ext == ".abc":
             return ABCLoader(verbose=verbose)

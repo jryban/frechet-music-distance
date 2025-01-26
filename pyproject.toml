@@ -54,5 +54,5 @@ packages = [
   "frechet_music_distance.models.clamp2",
   "frechet_music_distance.models.clamp",
   "frechet_music_distance.gaussian_estimators",
-  "frechet_music_distance.dataloaders",
+  "frechet_music_distance.dataset_loaders",
 ]

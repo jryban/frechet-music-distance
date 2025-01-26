@@ -36,18 +36,16 @@ class FrechetMusicDistance:
         if isinstance(gaussian_estimator, str):
             gaussian_estimator = get_estimator_by_name(gaussian_estimator)
 
-        self.feature_extractor = feature_extractor
-        self.gaussian_estimator = gaussian_estimator
-        self.verbose = verbose
-        self.mean_reference = None
-        self.covariance_reference = None
+        self._feature_extractor = feature_extractor
+        self._gaussian_estimator = gaussian_estimator
+        self._verbose = verbose
 
     def score(self, reference_path: str | Path, test_path: str | Path) -> float:
-        reference_features = self.feature_extractor.extract_features(reference_path)
-        mean_reference,  covariance_reference = self.gaussian_estimator.estimate_parameters(reference_features)
+        reference_features = self._feature_extractor.extract_features(reference_path)
+        mean_reference,  covariance_reference = self._gaussian_estimator.estimate_parameters(reference_features)
 
-        test_features = self.feature_extractor.extract_features(test_path)
-        mean_test, covariance_test = self.gaussian_estimator.estimate_parameters(test_features)
+        test_features = self._feature_extractor.extract_features(test_path)
+        mean_test, covariance_test = self._gaussian_estimator.estimate_parameters(test_features)
 
         return self._compute_fmd(mean_reference, mean_test, covariance_reference, covariance_test)
 
@@ -59,17 +57,17 @@ class FrechetMusicDistance:
         min_n: int = 500,
     ) -> FMDInfResults:
 
-        reference_features = self.feature_extractor.extract_features(reference_path)
-        test_features = self.feature_extractor.extract_features(test_path)
-        mean_reference, covariance_reference = self.gaussian_estimator.estimate_parameters(reference_features)
+        reference_features = self._feature_extractor.extract_features(reference_path)
+        test_features = self._feature_extractor.extract_features(test_path)
+        mean_reference, covariance_reference = self._gaussian_estimator.estimate_parameters(reference_features)
 
         score, slope, r2, points = self._compute_fmd_inf(mean_reference, covariance_reference, test_features, steps, min_n)
         return FMDInfResults(score, slope, r2, points)
 
     def score_individual(self, reference_path: str | Path, test_song_path: str | Path) -> float:
-        reference_features = self.feature_extractor.extract_features(reference_path)
-        test_feature = self.feature_extractor.extract_feature(test_song_path)
-        mean_reference, covariance_reference = self.gaussian_estimator.estimate_parameters(reference_features)
+        reference_features = self._feature_extractor.extract_features(reference_path)
+        test_feature = self._feature_extractor.extract_feature(test_song_path)
+        mean_reference, covariance_reference = self._gaussian_estimator.estimate_parameters(reference_features)
         mean_test, covariance_test = test_feature.flatten(), covariance_reference
 
         return self._compute_fmd(mean_reference, mean_test, covariance_reference, covariance_test)
@@ -101,7 +99,7 @@ class FrechetMusicDistance:
         covmean, _ = scipy.linalg.sqrtm(sigma_test.dot(sigma_ref), disp=False)
         if not np.isfinite(covmean).all():
             msg = f"FMD calculation produces singular product; adding {eps} to diagonal of cov estimates"
-            if self.verbose:
+            if self._verbose:
                 print(msg)
             offset = np.eye(sigma_test.shape[0]) * eps
             covmean = scipy.linalg.sqrtm((sigma_test + offset).dot(sigma_ref + offset))
@@ -137,7 +135,7 @@ class FrechetMusicDistance:
         results = []
         rng = np.random.default_rng()
 
-        for n in tqdm(ns, desc="Calculating FMD-inf", disable=(not self.verbose)):
+        for n in tqdm(ns, desc="Calculating FMD-inf", disable=(not self._verbose)):
             # Select n feature frames randomly (with replacement)
             indices = rng.choice(test_features.shape[0], size=n, replace=True)
             sample_test_features = test_features[indices]

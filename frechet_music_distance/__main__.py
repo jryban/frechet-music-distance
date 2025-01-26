@@ -12,7 +12,7 @@ def create_parser() -> argparse.ArgumentParser:
 
     subparsers = parser.add_subparsers(dest="command", help="Sub-command to run")
     # ------------------------
-    # Subparser: "score"  # noqa: ERA001
+    # Subparser: "score"
     # ------------------------
     score_parser = subparsers.add_parser("score", help="Compute Frechet Music Distance")
     score_parser.add_argument("reference_dataset", nargs="?", help="Path to reference dataset")
@@ -25,7 +25,7 @@ def create_parser() -> argparse.ArgumentParser:
     score_parser.add_argument("--clear-cache", action="store_true", help="Clear precomputed cache")
 
     # ------------------------
-    # Subparser: "clear"  # noqa: ERA001
+    # Subparser: "clear"
     # ------------------------
     subparsers.add_parser("clear", help="Clear precomputed cache")
     return parser

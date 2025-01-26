@@ -1,10 +1,10 @@
 from pathlib import Path
 from typing import Union
 
-from .dataloader import DataLoader
+from .dataset_loader import DatasetLoader
 
 
-class ABCLoader(DataLoader):
+class ABCLoader(DatasetLoader):
 
     def __init__(self, verbose: bool = True) -> None:
         supported_extensions = (".abc",)

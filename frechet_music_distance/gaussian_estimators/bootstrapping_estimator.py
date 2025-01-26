@@ -9,17 +9,17 @@ class BootstrappingEstimator(GaussianEstimator):
 
     def __init__(self, num_samples: int = 1000) -> None:
         super().__init__()
-        self.num_samples = num_samples
-        self.mle = MaxLikelihoodEstimator()
-        self.rng = np.random.default_rng()
+        self._num_samples = num_samples
+        self._mle = MaxLikelihoodEstimator()
+        self._rng = np.random.default_rng()
 
     def estimate_parameters(self, features: NDArray) -> tuple[NDArray, NDArray]:
         means = []
         covs = []
-        for _ in range(self.num_samples):
-            sample_indices = self.rng.choice(features.shape[0], size=features.shape[0], replace=True)
+        for _ in range(self._num_samples):
+            sample_indices = self._rng.choice(features.shape[0], size=features.shape[0], replace=True)
             bootstrap_sample = features[sample_indices]
-            mean, cov = self.mle.estimate_parameters(bootstrap_sample)
+            mean, cov = self._mle.estimate_parameters(bootstrap_sample)
             means.append(mean)
             covs.append(cov)
 

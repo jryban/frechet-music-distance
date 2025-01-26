@@ -8,10 +8,10 @@ class BasicShrinkageEstimator(GaussianEstimator):
 
     def __init__(self, shrinkage: float = 0.1) -> None:
         super().__init__()
-        self.model = ShrunkCovariance(assume_centered=False, shrinkage=shrinkage)
+        self._model = ShrunkCovariance(assume_centered=False, shrinkage=shrinkage)
 
     def estimate_parameters(self, features: NDArray) -> tuple[NDArray, NDArray]:
-        results = self.model.fit(features)
+        results = self._model.fit(features)
 
         mean = results.location_
         cov = results.covariance_

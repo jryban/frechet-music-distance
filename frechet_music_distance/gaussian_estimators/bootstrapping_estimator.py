@@ -14,14 +14,13 @@ class BootstrappingEstimator(GaussianEstimator):
         self._rng = np.random.default_rng()
 
     def estimate_parameters(self, features: NDArray) -> tuple[NDArray, NDArray]:
-        means = []
-        covs = []
+        running_mean = 0
+        runing_cov = np.zeros((features.shape[1], features.shape[1]))
         for _ in range(self._num_samples):
             sample_indices = self._rng.choice(features.shape[0], size=features.shape[0], replace=True)
             bootstrap_sample = features[sample_indices]
             mean, cov = self._mle.estimate_parameters(bootstrap_sample)
-            means.append(mean)
-            covs.append(cov)
+            running_mean += mean / self._num_samples
+            runing_cov += cov / self._num_samples
 
-        mean, cov = np.mean(means, axis=0), np.mean(covs, axis=0)
-        return mean, cov
+        return running_mean, runing_cov

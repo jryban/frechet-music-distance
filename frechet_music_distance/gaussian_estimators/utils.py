@@ -1,4 +1,4 @@
-from .basic_shrikage_estimator import BasicShrinkageEstimator
+from .shrikage_estimator import ShrinkageEstimator
 from .bootstrapping_estimator import BootstrappingEstimator
 from .gaussian_estimator import GaussianEstimator
 from .leodit_wolf_estimator import LeoditWolfEstimator
@@ -12,7 +12,7 @@ def get_estimator_by_name(name: str) -> GaussianEstimator:
     elif name == "bootstrap":
         return BootstrappingEstimator()
     elif name == "shrinkage":
-        return BasicShrinkageEstimator()
+        return ShrinkageEstimator()
     elif name == "leodit_wolf":
         return LeoditWolfEstimator()
     elif name == "oas":

@@ -1,4 +1,4 @@
-from .basic_shrikage_estimator import BasicShrinkageEstimator
+from .shrikage_estimator import ShrinkageEstimator
 from .bootstrapping_estimator import BootstrappingEstimator
 from .gaussian_estimator import GaussianEstimator
 from .leodit_wolf_estimator import LeoditWolfEstimator

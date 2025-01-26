@@ -4,7 +4,7 @@ from sklearn.covariance import ShrunkCovariance
 from .gaussian_estimator import GaussianEstimator
 
 
-class BasicShrinkageEstimator(GaussianEstimator):
+class ShrinkageEstimator(GaussianEstimator):
 
     def __init__(self, shrinkage: float = 0.1) -> None:
         super().__init__()

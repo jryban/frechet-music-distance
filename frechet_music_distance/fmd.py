@@ -114,7 +114,7 @@ class FrechetMusicDistance:
 
         tr_covmean = np.trace(covmean)
 
-        return diff.dot(diff) + np.trace(sigma_test) + np.trace(sigma_ref) - 2 * tr_covmean
+        return (diff.dot(diff) + np.trace(sigma_test) + np.trace(sigma_ref) - 2 * tr_covmean).item()
 
     def _compute_fmd_inf(
         self,
@@ -155,4 +155,4 @@ class FrechetMusicDistance:
         r2 = 1 - np.sum((ys[:, 1] - (slope * xs + intercept)) ** 2) / np.sum((ys[:, 1] - np.mean(ys[:, 1])) ** 2)
 
         # Since intercept is the FMD-inf, we can just return it
-        return intercept, slope, r2, results
+        return intercept.item(), slope.item(), r2.item(), results

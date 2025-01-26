@@ -91,7 +91,7 @@ class CLaMP2Extractor(FeatureExtractor):
 
     def _choose_dataset_loader(self, extension: str) -> DatasetLoader:
         if extension in (".mid", ".midi"):
-            return self.midi_dataset_loader
+            return self._midi_dataset_loader
         elif extension == ".abc":
             return self._abc_dataset_loader
         else:

@@ -1,5 +1,6 @@
 import pytest
 
+from frechet_music_distance import FrechetMusicDistance
 from frechet_music_distance.fmd import FMDInfResults
 from frechet_music_distance.models import CLaMP2Extractor, CLaMPExtractor
 from frechet_music_distance.utils import clear_cache
@@ -9,31 +10,35 @@ class TestFrechetMusicDistance:
     @staticmethod
     def test_basic_creation_clamp2(fmd_clamp2):
         assert fmd_clamp2 is not None
-        assert fmd_clamp2.verbose is False
-        assert isinstance(fmd_clamp2.feature_extractor, CLaMP2Extractor)
+        assert fmd_clamp2._verbose is False
+        assert isinstance(fmd_clamp2._feature_extractor, CLaMP2Extractor)
         clear_cache()
 
     @staticmethod
     def test_basic_creation_clamp(fmd_clamp):
         assert fmd_clamp is not None
-        assert fmd_clamp.verbose is False
-        assert isinstance(fmd_clamp.feature_extractor, CLaMPExtractor)
+        assert fmd_clamp._verbose is False
+        assert isinstance(fmd_clamp._feature_extractor, CLaMPExtractor)
         clear_cache()
 
     @staticmethod
     @pytest.mark.parametrize("input_dataset_path", ["midi_data_path", "abc_data_path"])
-    def test_clamp2_score(fmd_clamp2, midi_data_path, abc_data_path, input_dataset_path):
+    @pytest.mark.parametrize("estimator_name", ["shrinkage", "mle", "leodit_wolf", "bootstrap", "oas"])
+    def test_clamp2_score(midi_data_path, abc_data_path, input_dataset_path, estimator_name):
+        fmd = FrechetMusicDistance(feature_extractor="clamp2", gaussian_estimator=estimator_name, verbose=False)
         current_dataset = locals()[input_dataset_path]
-        score = fmd_clamp2.score(current_dataset, current_dataset)
+        score = fmd.score(current_dataset, current_dataset)
         assert isinstance(score, float)
         assert score == pytest.approx(0, abs=0.1)
         clear_cache()
 
     @staticmethod
     @pytest.mark.parametrize("input_dataset_path", ["midi_data_path", "abc_data_path"])
-    def test_clamp2_score_inf(fmd_clamp2, midi_data_path, abc_data_path, input_dataset_path):
+    @pytest.mark.parametrize("estimator_name", ["shrinkage", "mle", "leodit_wolf", "bootstrap", "oas"])
+    def test_clamp2_score_inf(midi_data_path, abc_data_path, input_dataset_path, estimator_name):
+        fmd = FrechetMusicDistance(feature_extractor="clamp2", gaussian_estimator=estimator_name, verbose=False)
         current_dataset = locals()[input_dataset_path]
-        score = fmd_clamp2.score_inf(current_dataset, current_dataset, steps=3, min_n=3)
+        score = fmd.score_inf(current_dataset, current_dataset, steps=3, min_n=3)
         assert isinstance(score, FMDInfResults)
         assert isinstance(score.score, float)
         assert isinstance(score.r2, float)
@@ -42,15 +47,37 @@ class TestFrechetMusicDistance:
         clear_cache()
 
     @staticmethod
-    def test_clamp_score(fmd_clamp, abc_data_path):
-        score = fmd_clamp.score(abc_data_path, abc_data_path)
+    @pytest.mark.parametrize("estimator_name", ["shrinkage", "mle", "leodit_wolf", "bootstrap", "oas"])
+    def test_clamp2_score_individual_midi(midi_data_path, midi_song_path, estimator_name):
+        fmd = FrechetMusicDistance(feature_extractor="clamp2", gaussian_estimator=estimator_name, verbose=False)
+        score = fmd.score_individual(midi_data_path, midi_song_path)
+        assert isinstance(score, float)
+        assert score == pytest.approx(339, abs=10)
+        clear_cache()
+
+    @staticmethod
+    @pytest.mark.parametrize("estimator_name", ["shrinkage", "mle", "leodit_wolf", "bootstrap", "oas"])
+    def test_clamp2_score_individual_abc(abc_data_path, abc_song_path, estimator_name):
+        fmd = FrechetMusicDistance(feature_extractor="clamp2", gaussian_estimator=estimator_name, verbose=False)
+        score = fmd.score_individual(abc_data_path, abc_song_path)
+        assert isinstance(score, float)
+        assert score == pytest.approx(275, abs=10)
+        clear_cache()
+
+    @staticmethod
+    @pytest.mark.parametrize("estimator_name", ["shrinkage", "mle", "leodit_wolf", "bootstrap", "oas"])
+    def test_clamp_score(abc_data_path, estimator_name):
+        fmd = FrechetMusicDistance(feature_extractor="clamp", gaussian_estimator=estimator_name, verbose=False)
+        score = fmd.score(abc_data_path, abc_data_path)
         assert isinstance(score, float)
         assert score == pytest.approx(0, abs=0.1)
         clear_cache()
 
     @staticmethod
-    def test_clamp_score_inf(fmd_clamp, abc_data_path):
-        score = fmd_clamp.score_inf(abc_data_path, abc_data_path, steps=3, min_n=3)
+    @pytest.mark.parametrize("estimator_name", ["shrinkage", "mle", "leodit_wolf", "bootstrap", "oas"])
+    def test_clamp_score_inf(abc_data_path, estimator_name):
+        fmd = FrechetMusicDistance(feature_extractor="clamp", gaussian_estimator=estimator_name, verbose=False)
+        score = fmd.score_inf(abc_data_path, abc_data_path, steps=3, min_n=3)
         assert isinstance(score, FMDInfResults)
         assert isinstance(score.score, float)
         assert isinstance(score.r2, float)
@@ -59,22 +86,10 @@ class TestFrechetMusicDistance:
         clear_cache()
 
     @staticmethod
-    def test_clamp_score_individual(fmd_clamp, abc_data_path, abc_song_path):
-        score = fmd_clamp.score_individual(abc_data_path, abc_song_path)
+    @pytest.mark.parametrize("estimator_name", ["shrinkage", "mle", "leodit_wolf", "bootstrap", "oas"])
+    def test_clamp_score_individual(abc_data_path, abc_song_path, estimator_name):
+        fmd = FrechetMusicDistance(feature_extractor="clamp", gaussian_estimator=estimator_name, verbose=False)
+        score = fmd.score_individual(abc_data_path, abc_song_path)
         assert isinstance(score, float)
         assert score == pytest.approx(90, abs=1)
-        clear_cache()
-
-    @staticmethod
-    def test_clamp2_score_individual_midi(fmd_clamp2, midi_data_path, midi_song_path):
-        score = fmd_clamp2.score_individual(midi_data_path, midi_song_path)
-        assert isinstance(score, float)
-        assert score == pytest.approx(339, abs=1)
-        clear_cache()
-
-    @staticmethod
-    def test_clamp2_score_individual_abc(fmd_clamp2, abc_data_path, abc_song_path):
-        score = fmd_clamp2.score_individual(abc_data_path, abc_song_path)
-        assert isinstance(score, float)
-        assert score == pytest.approx(275, abs=1)
         clear_cache()

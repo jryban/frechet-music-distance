@@ -1,4 +1,7 @@
+
 # Frechet Music Distance
+
+[![arXiv](https://img.shields.io/badge/cs.SD-arxiv:2412.07948-B31B1B.svg)](https://arxiv.org/abs/2412.07948)
 
 ## Table of Contents
 - [Introduction](#introduction)
@@ -18,9 +21,9 @@ A library for calculating Frechet Music Distance (FMD). This is an official impl
 - Calculating FMD and FMD-Inf scores between two datasets for evaluation
 - Caching extracted features and distribution parameters to speedup subsequent computations
 - Support for various symbolic music representations (**MIDI** and **ABC**)
-- Support for various embedding models (**CLaMP 2**)(**CLaMP 1**)
-- Support for various methods of estimating embedding distribution parameters (TODO)
-- Computation of per-song FMD to find outliers in the dataset (TODO)
+- Support for various embedding models (**CLaMP 2**, **CLaMP 1**)
+- Support for various methods of estimating embedding distribution parameters (**MLE**, **Leodit Wolf**, **Shrinkage**, **OAS**, **Bootstrap**)
+- Computation of per-song FMD to find outliers in the dataset
 
 
 ## Installation
@@ -37,7 +40,7 @@ cd frechet-music-distance
 pip install -e .
 ```
 
-The library was tested on Linux and MacOS, but it should Work on Windows as well.
+The library was tested on Linux and MacOS, but it should work on Windows as well.
 
 
 ## Usage
@@ -48,9 +51,8 @@ The library currently supports **MIDI** and **ABC** symbolic music representatio
 ### Command Line
 
 ```bash
-fmd score [-h] [--model {clamp2,clamp}] [--reference_ext REFERENCE_EXT] [--test_ext TEST_EXT] [--inf]
-                              [--steps STEPS] [--min_n MIN_N] [--clear-cache]
-                              <reference_dataset> <test_dataset>
+fmd score [-h] [--model {clamp2,clamp}] [--estimator {mle,bootstrap,oas,shrinkage,leodit_wolf}] [--inf] [--steps STEPS] [--min_n MIN_N] [--clear-cache] [reference_dataset] [test_dataset]
+
 ```
 
 #### Positional arguments:
@@ -58,17 +60,11 @@ fmd score [-h] [--model {clamp2,clamp}] [--reference_ext REFERENCE_EXT] [--test_
   * `test_dataset`:          Path to the test dataset
 
 #### Options:
-  * `--model {clamp2,clamp}, -m {clamp2,clamp}`
-                        Embedding model name
-  * `--reference_ext, -r REFERENCE_EXT`
-                        Music file extension in referene dataset (e.g. .midi). The program will automatically ifer this if not provided
-  * `--test_ext, -t TEST_EXT`
-                        Music file extension in test dataset (e.g. .midi). The program will automatically ifer this if not provided.
+  * `--model {clamp2,clamp}, -m {clamp2,clamp}` Embedding model name
+  * `--estimator {mle,bootstrap,oas,shrinkage,leodit_wolf}, -e {mle,bootstrap,oas,shrinkage,leodit_wolf}` Gaussian estimator for mean and covariance
   * `--inf`                  Use FMD-Inf extrapolation
-  * `--steps, -s STEPS`
-                        Number of steps when calculating FMD-Inf
-  * `--min_n, -n MIN_N`
-                        Mininum sample size when calculating FMD-Inf (Must be smaller than the size of test dataset)
+  * `--steps STEPS, -s STEPS` Number of steps when calculating FMD-Inf
+  * `--min_n MIN_N, -n MIN_N` Mininum sample size when calculating FMD-Inf (Must be smaller than the size of the test dataset)
   * `--clear-cache`     Clear the pre-computed cache before FMD calculation
 
 #### Cleanup
@@ -80,38 +76,45 @@ fmd clear
 
 ### Python API
 
-#### Standard FMD score
+#### Initialization
+You can initialize the metric like so:
+
 ```python
 from frechet_music_distance import FrechetMusicDistance
 
-metric = FrechetMusicDistance()
+metric = FrechetMusicDistance(feature_extractor='<model_name>', gaussian_estimator='<esimator_name>', verbose=True)
+```
+Valid values for `<model_name>` are: `clamp2` (default), `clamp` 
+Valid values for `<esimator_name>` are: `mle` (default), `bootstrap`, `shrinkage`, `leodit_wolf`, `oas`
+
+If you want more control over feature extraction models and gaussian estimators, you can instantiate the object outside and pass it to the constructor directly like so:
+
+```python
+from frechet_music_distance import FrechetMusicDistance
+from frechet_music_distance.gaussian_estimators import LeoditWolfEstimator, MaxLikelihoodEstimator, OASEstimator, BootstrappingEstimator, ShrinkageEstimator
+from frechet_music_distance.models import CLaMP2Extractor, CLaMPExtractor
+
+extractor = CLaMP2Extractor(verbose=True)
+estimator = ShrinkageEstimator(shrinkage=0.1)
+fmd = FrechetMusicDistance(feature_extractor=extractor, gaussian_estimator=estimator, verbose=True)
+
+```
+
+#### Standard FMD score
+```python
 score = metric.score(
     reference_dataset="<reference_dataset_path>",
     test_dataset="<test_dataset_path>"
 )
 ```
 
-or if you have already data loaded into memory you can use `score_in_memory` method.
-You have to pass in that case the data as a list of strings.
-
-```python
-from frechet_music_distance import FrechetMusicDistance
-
-metric = FrechetMusicDistance()
-score = metric.score_in_memory(
-    reference_data="<reference_dataset>",
-    test_data="<test_dataset>"
-)
-```
 
 #### FMD-Inf score
 ```python
-from frechet_music_distance import FrechetMusicDistance
 
-metric = FrechetMusicDistance()
 result = metric.score_inf(
-    reference_dataset="<reference_dataset>",
-    test_dataset="<test_dataset>",
+    reference_dataset="<reference_dataset_path>",
+    test_dataset="<test_dataset_path>",
     steps=<num_steps> # default=25
     min_n=<minumum_sample_size> # default=500
 )
@@ -123,16 +126,82 @@ result.points  # To get the point estimates used in FMD-Inf regression
 
 ```
 
+#### Individual (per-song) score
+```python
+
+result = metric.score_individual(
+    reference_dataset="<reference_dataset_path>",
+    test_song_path="<test_song_path>",
+)
+
+```
+
 #### Cleanup
 Additionaly the pre-computed cache can be cleared like so:
 
 ```python
-from frechet_music_distance import FrechetMusicDistance
+from frechet_music_distance.utils import clear_cache
 
-FrechetMusicDistance.clear_cache()
+clear_cache()
 ```
 
-## Supported Models
+## Using custom models and estimators
+
+### Embedding Model
+
+You can add your own model as a feature extractor like so:
+
+```python
+from frechet_music_distance.models import FeatureExtractor
+
+class MyExtractor(FeatureExtractor):
+
+    def __init__(self, verbose: bool = True) -> None:
+        super().__init__(verbose)
+        """<My implementation>"""
+        
+
+    @torch.no_grad()
+    def _extract_feature(self, data: Any) -> NDArray:
+        """<My implementation>"""
+
+
+    def extract_features(self, dataset_path: str | Path) -> NDArray:
+        """<My implementation of loading data>"""
+
+        return super()._extract_features(data)
+
+
+    def extract_feature(self, filepath: str | Path) -> NDArray:
+        """<My implementation of loading data>"""
+
+        return self._extract_feature(data)
+
+
+```
+If your model uses the same data format as CLaMP2 or CLaMP you can use `frechet_music_distance.dataset_loaders.ABCLoader` or `frechet_music_distance.dataset_loaders.MIDIasMTFLoader` for loading music data.
+
+### Gaussian Estimator
+
+You can add your own estimator like so:
+```python
+from .gaussian_estimator import GaussianEstimator
+from .max_likelihood_estimator import MaxLikelihoodEstimator
+
+
+class BootstrappingEstimator(GaussianEstimator):
+
+    def __init__(self, num_samples: int = 1000) -> None:
+        super().__init__()
+        """<My implementation>"""
+
+    def estimate_parameters(self, features: NDArray) -> tuple[NDArray, NDArray]:
+        """<My implementation>"""
+
+        return mean, cov
+```
+
+## Supported Embedding Models
 
 | Model | Name in library | Description | Creator         |
 | --- | --- | --- |-----------------|

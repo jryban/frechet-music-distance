@@ -8,8 +8,9 @@
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Extending FMD](#extending-fmd)
 - [Citation](#citation)
-- [Acknowledgements](#citation)
+- [Acknowledgements](#acknowledgements)
 - [License](#license)
 
 
@@ -145,7 +146,7 @@ from frechet_music_distance.utils import clear_cache
 clear_cache()
 ```
 
-## Using custom models and estimators
+## Extending FMD
 
 ### Embedding Model
 

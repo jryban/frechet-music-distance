@@ -8,7 +8,7 @@ from frechet_music_distance.utils import clear_cache
 
 class TestFrechetMusicDistance:
     @staticmethod
-    def fmd():
+    def test_initialization_clamp2():
         fmd = FrechetMusicDistance(feature_extractor="clamp2", verbose=False)
         assert fmd is not None
         assert fmd._verbose is False
@@ -17,7 +17,7 @@ class TestFrechetMusicDistance:
         del fmd
 
     @staticmethod
-    def test_basic_creation_clamp():
+    def test_initialization_clamp():
         fmd = FrechetMusicDistance(feature_extractor="clamp", verbose=False)
         assert fmd is not None
         assert fmd._verbose is False

@@ -37,7 +37,7 @@ class TestFrechetMusicDistance:
     @staticmethod
     @pytest.mark.parametrize("input_dataset_path", ["midi_data_path", "abc_data_path"])
     @pytest.mark.parametrize("estimator_name", ["shrinkage", "mle", "leodit_wolf", "bootstrap", "oas"])
-    def test_clamp2_score(base_fmd_clamp2, midi_data_path, abc_data_path, input_dataset_path, estimator_name):
+    def test_clamp2_score_inf(base_fmd_clamp2, midi_data_path, abc_data_path, input_dataset_path, estimator_name):
         current_dataset = locals()[input_dataset_path]
         feature_extractor = get_estimator_by_name(estimator_name)
         base_fmd_clamp2._gaussian_estimator = feature_extractor

@@ -51,7 +51,7 @@ class CLaMP2Extractor(FeatureExtractor):
 
     def _download_checkpoint(self) -> None:
         print(f"Downloading CLaMP2 weights from: {config.CLAMP2_WEIGHTS_URL} into {config.CLAMP2_WEIGHTS_PATH}")
-        download_file(config.CLAMP2_WEIGHTS_URL, config.CLAMP2_WEIGHTS_PATH, verbose=self.verbose)
+        download_file(config.CLAMP2_WEIGHTS_URL, config.CLAMP2_WEIGHTS_PATH, verbose=self._verbose)
 
     @torch.no_grad()
     def _extract_feature(self, data: str) -> NDArray:

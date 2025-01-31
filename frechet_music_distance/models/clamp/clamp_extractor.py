@@ -1,14 +1,15 @@
 from __future__ import annotations
+
 import logging as lg
 from pathlib import Path
 
-from ...dataset_loaders.abc_loader import ABCLoader, DatasetLoader
-
-from ...dataset_loaders.utils import get_dataset_ext
 import torch
 from numpy.typing import NDArray
 
-from ..feature_extractor import FeatureExtractor
+from frechet_music_distance.dataset_loaders.abc_loader import ABCLoader, DatasetLoader
+from frechet_music_distance.dataset_loaders.utils import get_dataset_ext
+from frechet_music_distance.models.feature_extractor import FeatureExtractor
+
 from .clamp_model import CLaMP
 from .clamp_utils import PATCH_LENGTH, MusicPatchilizer
 

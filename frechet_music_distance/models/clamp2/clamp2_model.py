@@ -5,7 +5,7 @@ from .config import CLAMP2_HIDDEN_SIZE, M3_HIDDEN_SIZE, TEXT_MODEL_NAME
 from .m3_patch_encoder import M3PatchEncoder
 
 
-class CLaMP2Model(PreTrainedModel):
+class CLaMP2(PreTrainedModel):
 
     def __init__(
             self,

@@ -41,7 +41,7 @@ class M3Patchilizer:
         patch_size: int = PATCH_SIZE,
         add_special_patches: bool = False,
         truncate: bool = False,
-        random_truncate: bool = False
+        random_truncate: bool = False,
     ) -> list[list[int]]:
 
         item = unidecode(item)

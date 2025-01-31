@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "frechet_music_distance"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
   "abctoolkit",
   "accelerate",
@@ -16,7 +16,8 @@ dependencies = [
   "mido",
   "transformers",
   "torch",
-  "unidecode"
+  "unidecode",
+  "scikit-learn"
 ]
 requires-python = ">=3.9"
 authors = [
@@ -47,4 +48,11 @@ Repository = "https://github.com/jryban/frechet-music-distance.git"
 fmd = "frechet_music_distance.__main__:main"
 
 [tool.setuptools]
-packages = ["frechet_music_distance", "frechet_music_distance.models", "frechet_music_distance.models.clamp2"]
+packages = [
+  "frechet_music_distance",
+  "frechet_music_distance.models",
+  "frechet_music_distance.models.clamp2",
+  "frechet_music_distance.models.clamp",
+  "frechet_music_distance.gaussian_estimators",
+  "frechet_music_distance.dataset_loaders",
+]

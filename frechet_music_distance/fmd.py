@@ -1,22 +1,17 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
-from functools import partial, reduce
-from multiprocessing.dummy import Pool as ThreadPool
 from pathlib import Path
-from typing import Callable, Optional, Union
 
 import numpy as np
 import scipy.linalg
-from joblib import Memory
 from numpy.typing import NDArray
 from tqdm import tqdm
 
-from .models import CLaMP2Extractor
-from .utils import load_abc_task, load_midi_task
-
-CAHE_MEMORY_DIR = Path.home() / ".cache" / "frechet_music_distance" / "precomputed"
-
-memory = Memory(CAHE_MEMORY_DIR, verbose=0)
-memory.reduce_size(bytes_limit="10G")
+from .gaussian_estimators import GaussianEstimator, MaxLikelihoodEstimator
+from .gaussian_estimators.utils import get_estimator_by_name
+from .models import FeatureExtractor
+from .models.utils import get_feature_extractor_by_name
 
 
 @dataclass
@@ -29,67 +24,53 @@ class FMDInfResults:
 
 class FrechetMusicDistance:
 
-    def __init__(self, model_name: str = "clamp2", verbose: bool = True) -> None:
-        self.verbose = verbose
-        self.model_name = model_name
-        if model_name == "clamp2":
-            self.model = CLaMP2Extractor()
-
-        self._preprocess = partial(memory.cache(self._preprocess, ignore=["self"]), model_name=self.model_name)
-        self._estimate_gaussian_parameters = memory.cache(self._estimate_gaussian_parameters, ignore=["self"])
-
-    def score(
+    def __init__(
         self,
-        reference_dataset: Union[str, Path],
-        test_dataset: Union[str, Path],
-        reference_ext: Optional[str] = None,
-        test_ext: Optional[str] = None,
-        method: str = "mle"
-    ) -> float:
+        feature_extractor: str | FeatureExtractor = "clamp2",
+        gaussian_estimator: str | GaussianEstimator = "mle",
+        verbose: bool = True,
+    ) -> None:
+        if isinstance(feature_extractor, str):
+            feature_extractor = get_feature_extractor_by_name(feature_extractor, verbose=verbose)
 
-        reference_features= self._preprocess(reference_dataset, reference_ext)
-        test_features = self._preprocess(test_dataset, test_ext)
-        mean_reference, covariance_reference = self._estimate_gaussian_parameters(reference_features, method=method)
-        mean_test, covariance_test = self._estimate_gaussian_parameters(test_features, method=method)
+        if isinstance(gaussian_estimator, str):
+            gaussian_estimator = get_estimator_by_name(gaussian_estimator)
 
-        fmd_score = self._compute_fmd(mean_reference, mean_test, covariance_reference, covariance_test)
+        self._feature_extractor = feature_extractor
+        self._gaussian_estimator = gaussian_estimator
+        self._verbose = verbose
 
-        return fmd_score
+    def score(self, reference_path: str | Path, test_path: str | Path) -> float:
+        reference_features = self._feature_extractor.extract_features(reference_path)
+        mean_reference,  covariance_reference = self._gaussian_estimator.estimate_parameters(reference_features)
+
+        test_features = self._feature_extractor.extract_features(test_path)
+        mean_test, covariance_test = self._gaussian_estimator.estimate_parameters(test_features)
+
+        return self._compute_fmd(mean_reference, mean_test, covariance_reference, covariance_test)
 
     def score_inf(
         self,
-        reference_dataset: Union[str, Path],
-        test_dataset: Union[str, Path],
-        reference_ext: Optional[str] = None,
-        test_ext: Optional[str] = None,
+        reference_path: str | Path,
+        test_path: str | Path,
         steps: int = 25,
         min_n: int = 500,
-        method: str = "mle"
-    ) -> float:
+    ) -> FMDInfResults:
 
-        reference_features= self._preprocess(reference_dataset, reference_ext)
-        test_features = self._preprocess(test_dataset, test_ext)
-        mean_reference, covariance_reference = self._estimate_gaussian_parameters(reference_features, method=method)
+        reference_features = self._feature_extractor.extract_features(reference_path)
+        test_features = self._feature_extractor.extract_features(test_path)
+        mean_reference, covariance_reference = self._gaussian_estimator.estimate_parameters(reference_features)
 
-        score, slope, r2, points = self._compute_fmd_inf(mean_reference, covariance_reference, test_features, steps, min_n, method)
-
+        score, slope, r2, points = self._compute_fmd_inf(mean_reference, covariance_reference, test_features, steps, min_n)
         return FMDInfResults(score, slope, r2, points)
 
-    @staticmethod
-    def clear_cache() -> None:
-        memory.clear(warn=False)
+    def score_individual(self, reference_path: str | Path, test_song_path: str | Path) -> float:
+        reference_features = self._feature_extractor.extract_features(reference_path)
+        test_feature = self._feature_extractor.extract_feature(test_song_path)
+        mean_reference, covariance_reference = self._gaussian_estimator.estimate_parameters(reference_features)
+        mean_test, covariance_test = test_feature.flatten(), covariance_reference
 
-    def _preprocess(
-        self,
-        dataset_path: Union[str, Path],
-        ext: Optional[str] = None,
-        model_name: str = "clamp2",
-    ) -> NDArray:
-
-        data = self._load_dataset(dataset_path, ext)
-        features = self._extract_features(data)
-
-        return features
+        return self._compute_fmd(mean_reference, mean_test, covariance_reference, covariance_test)
 
     def _compute_fmd(
         self,
@@ -97,7 +78,7 @@ class FrechetMusicDistance:
         mean_test: NDArray,
         cov_reference: NDArray,
         cov_test: NDArray,
-        eps: float = 1e-6
+        eps: float = 1e-6,
     ) -> float:
         mu_test = np.atleast_1d(mean_test)
         mu_ref = np.atleast_1d(mean_reference)
@@ -107,10 +88,10 @@ class FrechetMusicDistance:
 
         assert (
             mu_test.shape == mu_ref.shape
-        ), "Training and test mean vectors have different lengths"
+        ), f"Reference and test mean vectors have different dimensions, {mu_test.shape} and {mu_ref.shape}"
         assert (
             sigma_test.shape == sigma_ref.shape
-        ), f"Training and test covariances have different dimensions, {sigma_test.shape} and {sigma_ref.shape}"
+        ), f"Reference and test covariances have different dimensions, {sigma_test.shape} and {sigma_ref.shape}"
 
         diff = mu_test - mu_ref
 
@@ -118,7 +99,7 @@ class FrechetMusicDistance:
         covmean, _ = scipy.linalg.sqrtm(sigma_test.dot(sigma_ref), disp=False)
         if not np.isfinite(covmean).all():
             msg = f"FMD calculation produces singular product; adding {eps} to diagonal of cov estimates"
-            if self.verbose:
+            if self._verbose:
                 print(msg)
             offset = np.eye(sigma_test.shape[0]) * eps
             covmean = scipy.linalg.sqrtm((sigma_test + offset).dot(sigma_ref + offset))
@@ -127,12 +108,13 @@ class FrechetMusicDistance:
         if np.iscomplexobj(covmean):
             if not np.allclose(np.diagonal(covmean).imag, 0, atol=1e-3):
                 m = np.max(np.abs(covmean.imag))
-                raise ValueError(f"Imaginary component {m}")
+                msg = f"Imaginary component {m}"
+                raise ValueError(msg)
             covmean = covmean.real
 
         tr_covmean = np.trace(covmean)
 
-        return diff.dot(diff) + np.trace(sigma_test) + np.trace(sigma_ref) - 2 * tr_covmean
+        return (diff.dot(diff) + np.trace(sigma_test) + np.trace(sigma_ref) - 2 * tr_covmean).item()
 
     def _compute_fmd_inf(
         self,
@@ -141,7 +123,6 @@ class FrechetMusicDistance:
         test_features: NDArray,
         steps: int = 25,
         min_n: int = 500,
-        method: str = "mle",
     ) -> tuple[float, float, float, NDArray]:
 
         # Calculate maximum n
@@ -152,12 +133,14 @@ class FrechetMusicDistance:
         # Generate list of ns to use
         ns = [int(n) for n in np.linspace(min_n, max_n, steps)]
         results = []
-        for n in tqdm(ns, desc="Calculating FMD-inf", disable=(not self.verbose)):
-            # Select n feature frames randomly (with replacement)
-            indices = np.random.choice(test_features.shape[0], size=n, replace=True)
-            embds_eval = test_features[indices]
+        rng = np.random.default_rng()
 
-            mean_test, cov_test = self._estimate_gaussian_parameters(embds_eval, method=method)
+        for n in tqdm(ns, desc="Calculating FMD-inf", disable=(not self._verbose)):
+            # Select n feature frames randomly (with replacement)
+            indices = rng.choice(test_features.shape[0], size=n, replace=True)
+            sample_test_features = test_features[indices]
+
+            mean_test, cov_test = MaxLikelihoodEstimator().estimate_parameters(sample_test_features)
             fad_score = self._compute_fmd(mean_reference, mean_test, cov_reference, cov_test)
 
             # Add to results
@@ -172,62 +155,4 @@ class FrechetMusicDistance:
         r2 = 1 - np.sum((ys[:, 1] - (slope * xs + intercept)) ** 2) / np.sum((ys[:, 1] - np.mean(ys[:, 1])) ** 2)
 
         # Since intercept is the FMD-inf, we can just return it
-        return intercept, slope, r2, results
-
-    def _load_dataset(self, dataset_path: Union[str, Path], file_ext: Optional[str] = None) -> Union[str, Path]:
-        if file_ext is None:
-            file_ext = self._get_file_ext(dataset_path)
-
-        if file_ext == ".mtf" or file_ext == ".abc":
-            return self._load_music_files(dataset_path, task=load_abc_task)
-
-        elif file_ext == ".midi" or file_ext == ".mid":
-            return self._load_music_files(dataset_path, task=load_midi_task)
-
-        raise ValueError(
-            f"Dataset {dataset_path} has unsupported extension {file_ext}.Supported extensions are: .midi, .mid, .mtf, .abc"
-        )
-
-    def _get_file_ext(self, dataset_path: Union[str, Path]) -> str:
-        for file in Path(dataset_path).rglob("*"):
-                if file.suffix in {".abc", ".midi", ".mtf", ".mid"}:
-                    return file.suffix
-        return None
-
-    def _extract_features(self, data: list[str]) -> NDArray:
-        features = []
-
-        for song in tqdm(data, desc="Extracting features", disable=(not self.verbose)):
-            feature = self.model.extract_feature(song)
-            features.append(feature)
-
-        return np.vstack(features)
-
-    def _load_music_files(self, dataset_path: Union[str, Path], task: Callable):
-        task_results = []
-        supported_extensions = [".midi", ".mid", ".abc"]
-        dataset_path = Path(dataset_path)
-        file_list = reduce(
-            lambda acc, arr: acc + arr,
-            [[str(f) for f in dataset_path.rglob(f'**/*{file_ext}')] for file_ext in supported_extensions]
-        )
-
-        pool = ThreadPool()
-        pbar = tqdm(total=len(file_list), disable=(not self.verbose), desc=f"Loading files from {dataset_path}")
-
-        for filepath in file_list:
-            res = pool.apply_async(
-                task,
-                args=(filepath,),
-                callback=lambda *args, **kwargs: pbar.update(),
-            )
-            task_results.append(res)
-        pool.close()
-        pool.join()
-
-        return [task.get() for task in task_results]
-
-    def _estimate_gaussian_parameters(self, features: NDArray, method: str = "mle") -> tuple[NDArray, NDArray]:
-        mean = np.mean(features, axis=0)
-        covariance = np.cov(features, rowvar=False)
-        return mean, covariance
+        return intercept.item(), slope.item(), r2.item(), results

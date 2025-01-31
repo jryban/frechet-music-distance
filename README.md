@@ -1,7 +1,8 @@
 
 # Frechet Music Distance
 
-[![arXiv](https://img.shields.io/badge/cs.SD-arxiv:2412.07948-B31B1B.svg)](https://arxiv.org/abs/2412.07948)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![arXiv](https://img.shields.io/badge/arXiv-2412.07948v2-b31b1b.svg)](https://arxiv.org/abs/2412.07948)
 
 ## Table of Contents
 - [Introduction](#introduction)

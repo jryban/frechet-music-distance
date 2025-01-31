@@ -34,7 +34,12 @@ The library can be installed from from [PyPi](https://pypi.org/project/frechet-m
 pip install frechet-music-distance
 ```
 
-or directly from source by cloning the repository and installing it locally:
+**Note**: If it doesn't work try updating `pip`:
+```bash
+pip install --upgrade pip
+```
+
+You can also install from source by cloning the repository and installing it locally:
 ```bash
 git clone https://github.com/jryban/frechet-music-distance.git
 cd frechet-music-distance
@@ -42,6 +47,12 @@ pip install -e .
 ```
 
 The library was tested on Linux and MacOS, but it should work on Windows as well.
+
+**Note**: If you encounter `NotOpenSSLWarning` please downgrade your `urllib3` version to `1.26.6`:
+```bash
+pip install urllib3==1.26.6
+```
+You can also use a different version of Python that supports OpenSSL, by following instructions provided in [urllib3 GitHub issue](https://github.com/urllib3/urllib3/issues/3020)
 
 
 ## Usage

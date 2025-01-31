@@ -1,6 +1,7 @@
 from pathlib import Path
-
 import pytest
+
+from frechet_music_distance.fmd import FrechetMusicDistance
 
 
 @pytest.fixture(scope="session", name="test_data_path")
@@ -26,3 +27,13 @@ def fixture_abc_song_path(abc_data_path) -> Path:
 @pytest.fixture(scope="session", name="midi_song_path")
 def fixture_midi_song_path(midi_data_path) -> Path:
     return midi_data_path / "example_1.mid"
+
+
+@pytest.fixture(scope="session", name="base_fmd_clamp")
+def fixture_base_fmd_clamp():
+    return FrechetMusicDistance(feature_extractor="clamp", gaussian_estimator="mle", verbose=False)
+
+
+@pytest.fixture(scope="session", name="base_fmd_clamp2")
+def fixture_base_fmd_clamp2():
+    return FrechetMusicDistance(feature_extractor="clamp2", gaussian_estimator="mle", verbose=False)

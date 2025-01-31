@@ -53,7 +53,7 @@ The library was tested on Linux and MacOS, but it should work on Windows as well
 ```bash
 pip install urllib3==1.26.6
 ```
-You can also use a different version of Python that supports OpenSSL, by following instructions provided in [urllib3 GitHub issue](https://github.com/urllib3/urllib3/issues/3020)
+or use a different version of Python that supports OpenSSL, by following the instructions provided in this [urllib3 GitHub issue](https://github.com/urllib3/urllib3/issues/3020)
 
 
 ## Usage

@@ -199,10 +199,8 @@ If your model uses the same data format as CLaMP2 or CLaMP you can use `frechet_
 You can add your own estimator like so:
 ```python
 from .gaussian_estimator import GaussianEstimator
-from .max_likelihood_estimator import MaxLikelihoodEstimator
 
-
-class BootstrappingEstimator(GaussianEstimator):
+class MyEstimator(GaussianEstimator):
 
     def __init__(self, num_samples: int = 1000) -> None:
         super().__init__()

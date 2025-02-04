@@ -116,8 +116,8 @@ fmd = FrechetMusicDistance(feature_extractor=extractor, gaussian_estimator=estim
 #### Standard FMD score
 ```python
 score = metric.score(
-    reference_dataset="<reference_dataset_path>",
-    test_dataset="<test_dataset_path>"
+    reference_path="<reference_dataset_path>",
+    test_path="<test_dataset_path>"
 )
 ```
 
@@ -126,8 +126,8 @@ score = metric.score(
 ```python
 
 result = metric.score_inf(
-    reference_dataset="<reference_dataset_path>",
-    test_dataset="<test_dataset_path>",
+    reference_path="<reference_dataset_path>",
+    test_path="<test_dataset_path>",
     steps=<num_steps> # default=25
     min_n=<minumum_sample_size> # default=500
 )
